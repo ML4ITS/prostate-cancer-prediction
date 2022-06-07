@@ -1,9 +1,8 @@
 from LSTM import training_test_LSTM
 from MLP import training_test_MLP
+from CNN1D import training_test_CNN1D
 from preprocessing import *
 import sys
-
-
 
 
 
@@ -30,3 +29,5 @@ if __name__ == "__main__":
         training_test_LSTM()
     elif type == "MLP":
         training_test_MLP()
+    else:
+        training_test_CNN1D()
