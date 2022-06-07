@@ -1,4 +1,4 @@
-from Models2.model import training_test_part
+from model import training_test_part
 from preprocessing import *
 import sys
 
@@ -11,9 +11,7 @@ import sys
 
 
 if __name__ == "__main__":
-    DUMMIES = True
-    DELTA_FEATURES = True
-    _, path1, path2 = sys.argv
+    _, path1, path2, DUMMIES, DELTA_FEATURES = sys.argv
     data1, data2 = upload_db(path1, path2, len=4)
     data1, data2 = remove_outliers(data1), remove_outliers(data2)
     if DUMMIES:

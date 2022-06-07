@@ -14,7 +14,7 @@ from torch.nn import functional as F
 from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
-from Models2.dataset import *
+from dataset import *
 
 
 class LSTMClassification(pl.LightningModule):
@@ -158,13 +158,8 @@ def objective(trial: optuna.trial.Trial) -> float:
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
-                         callbacks=[early_stop_callback]
-                         )
+                         callbacks=[early_stop_callback])
 
-    # hyperparameters_LSTM = dict("hyperparameters", hidden_size=hidden_size, num_layers = num_layers, learning_rate=learning_rate, batch_size=batch_size,
-    #                             dropout=dropout, rnn_type=rnn_type, bidirectional=bidirectional)
-    #
-    # trainer.logger.log_hyperparams(hyperparameters_LSTM)
     trainer.fit(LSTMmodel, datamodule=dm)
 
     return trainer.callback_metrics["valid_loss"].item()
@@ -197,11 +192,11 @@ def hyperparameter_tuning():
 def training_test_part():
     study = hyperparameter_tuning()
     trial = study.best_trial
-    hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
+    hidden_size = trial.suggest_int("hidden_size", 64, 1024, step=32)
     num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-5, 1e-2)
-    batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
-    dropout = trial.suggest_uniform("dropout", 0.1, 0.5)
+    batch_size = trial.suggest_int("batch_size", 32, 512, step=32)
+    dropout = trial.suggest_uniform("dropout", 0.1, 0.8)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
     N_FEATURES = extract_n_features()
