@@ -41,7 +41,7 @@ The datasets should be saved in *Models2/db* with the names *cancer.csv* and  *n
 
 ##THIRD STEP: Running the code using the Command-Line
 Command Line Arguments:
-1. PATH1: path of the dataset for patients WITH cancer ()
+1. PATH1: path of the dataset for patients WITH cancer 
 2. PATH2: path of the dataset for patients WITHOUT cancer
 3. DUMMIES: True / False
 4. DELTA_FEATURES: True / False
@@ -74,10 +74,13 @@ Command Line Arguments:
 2. Balanced classes (50% patients with cancer, 50% patients without cancer)
 
 
-3. Training set: 95% → 80271 patients Test set: 5% → 4225 patients
+3. Training set: 95% → 80.271 patients Test set: 5% → 4.225 patients
 
 
-4. Minimum length for each patient = 4
+4. Minimum time series' length for each patient = 4
+
+
+5. 50 <= age < 100
 
 
 ###DIFFERENT TYPES OF INPUT

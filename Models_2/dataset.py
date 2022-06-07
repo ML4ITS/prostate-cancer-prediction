@@ -39,10 +39,13 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 import seaborn as sn
 
 def extract_timesteps():
+    """extract the maximum timesteps"""
     data = pd.read_csv("db/data")
     return data.groupby(["ss_number_id"]).count().max()[0]
 
 def extract_n_features():
+    """extract the total number of features from data
+    data.shape[1] - 2 because I dont consider the target and the id"""
     data = pd.read_csv("db/data")
     return data.shape[1] - 2
 
@@ -73,13 +76,10 @@ def pad_collate(data):
     return features.float(), labels.long(), lengths.long()
 
 class psaDataset(Dataset):
-    '''
-Custom Dataset subclass.
-Serves as input to DataLoader to transform X
-  into sequence data using rolling window.
-DataLoader using this dataset will output batches
-  of `(batch_size, seq_len, n_features)` shape.
-'''
+    """Custom Dataset subclass.
+
+    DataLoader using this dataset will output batches
+      of `(batch_size, seq_len, n_features)` shape"""
     def __init__(self, X: np.ndarray, y: np.ndarray, seq_len: int = 1):
 
         self.X = X

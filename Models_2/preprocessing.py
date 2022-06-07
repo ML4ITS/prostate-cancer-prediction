@@ -3,6 +3,7 @@ import numpy as np
 
 
 def upload_db(path1, path2, len = 4):
+    """read the two dbs and select patients with a minimum number of values"""
     data1 = pd.read_csv(path1).sort_values(by = ["age"])
     data2 = pd.read_csv(path2).sort_values(by=["age"])
     v = data1.ss_number_id.value_counts()
@@ -14,8 +15,9 @@ def upload_db(path1, path2, len = 4):
     return data1, data2
 
 def dummies(data):
-    bins1 = [0, 30, 40, 50, 60, 70, 80, 120]
-    bins2 = [0, 4, 10, 2000]
+    """dummies for features age and psa"""
+    bins1 = [0, 30, 40, 50, 60, 70, 80, 120] #for age
+    bins2 = [0, 4, 10, 2000] #for psa
     labels = [0, 1 , 2, 3, 4, 5, 6]
     data["AgeGroup"] = pd.cut(data["age"], bins = bins1, labels = labels, right = False)
     data["PsaGroup"] = pd.cut(data["psa"], bins=bins2, labels=[0, 1, 2], right=False)
@@ -23,12 +25,14 @@ def dummies(data):
     return data
 
 def delta_features(data):
+    """delta time and delta psa """
     data["delta_time"] = data.sort_values(by = ["months"]).groupby(["ss_number_id"])["months"].apply(lambda x: x - x.shift()).fillna(np.nan)
     data["delta_psa"] = data.sort_values(by=["months"]).groupby(["ss_number_id"])["psa"].apply(lambda x: x - x.shift()).fillna(np.nan)
     data.dropna(inplace = True)
     return data
 
 def delete_columns(data):
+    """useless columns are removed"""
     del data["age"]
     del data["psa"]
     return data
@@ -40,8 +44,8 @@ def balance_db(data1, data2):
     return data2
 
 def assign_target(data1, data2):
-    data1["risk"] = 1
-    data2["risk"] = 0
+    data1["risk"] = 1 #cancer
+    data2["risk"] = 0 #no cancer
     return data1, data2
 
 def remove_outliers(data):
@@ -49,6 +53,7 @@ def remove_outliers(data):
     return data.loc[data['age'] < 100]
 
 def concat_data(data1, data2):
+    #union of the two dbs
     data = pd.concat([data1, data2])
     data = data.sort_values(by = ["months"])
     del data["ambiguous_date"]
