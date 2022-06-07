@@ -189,7 +189,7 @@ def hyperparameter_tuning():
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_part():
+def training_test_LSTM():
     study = hyperparameter_tuning()
     trial = study.best_trial
     hidden_size = trial.suggest_int("hidden_size", 64, 1024, step=32)
@@ -202,7 +202,7 @@ def training_test_part():
     N_FEATURES = extract_n_features()
 
     model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional)
-    EPOCHS = 100
+    EPOCHS = 200
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")

@@ -42,14 +42,25 @@ The datasets should be saved in *Models2/db* with the names *cancer.csv* and  *n
 Command Line Arguments:
 1. PATH1: path of the dataset for patients WITH cancer
 2. PATH2: path of the dataset for patients WITHOUT cancer
-3. DUMMIES: True/False
-4. DELTA_FEATURES: True/False
+3. DUMMIES: True / False
+4. DELTA_FEATURES: True / False
+5. TYPE: LSTM / CNN1D / MLP
  
 ***Scripts to be run***:
 ```bash
-    python main.py db/cancer.csv db/nocancer.csv True False
-    python main.py db/cancer.csv db/nocancer.csv False True
-    python main.py db/cancer.csv db/nocancer.csv False False
-    python main.py db/cancer.csv db/nocancer.csv True True
+    python main.py db/cancer.csv db/nocancer.csv True False LSTM
+    python main.py db/cancer.csv db/nocancer.csv False True LSTM
+    python main.py db/cancer.csv db/nocancer.csv False False LSTM
+    python main.py db/cancer.csv db/nocancer.csv True True LSTM
+    
+    python main.py db/cancer.csv db/nocancer.csv True False CNN1D
+    python main.py db/cancer.csv db/nocancer.csv False True CNN1D
+    python main.py db/cancer.csv db/nocancer.csv False False CNN1D
+    python main.py db/cancer.csv db/nocancer.csv True True CNN1D
+    
+    python main.py db/cancer.csv db/nocancer.csv True False MLP
+    python main.py db/cancer.csv db/nocancer.csv False True MLP
+    python main.py db/cancer.csv db/nocancer.csv False False MLP
+    python main.py db/cancer.csv db/nocancer.csv True True MLP
 ```
 ***

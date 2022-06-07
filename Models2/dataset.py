@@ -38,6 +38,10 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
 import seaborn as sn
 
+def extract_timesteps():
+    data = pd.read_csv("db/data")
+    return data.groupby(["ss_number_id"]).count().max()[0]
+
 def extract_n_features():
     data = pd.read_csv("db/data")
     return data.shape[1] - 2
@@ -57,7 +61,7 @@ def pad_collate(data):
         where example is a tensor of arbitrary shape
         and label/length are scalars"""
     _, labels, lengths = zip(*data)
-    max_len = max(lengths)
+    max_len = extract_timesteps()
     n_ftrs = data[0][0].size(1)
     features = torch.zeros((len(data), max_len, n_ftrs))
     labels = torch.tensor(labels)
@@ -141,15 +145,15 @@ class psaDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         train_dataset = psaDataset(self.X_train, self.y_train, seq_len=self.seq_len)
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, collate_fn=pad_collate)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, num_workers=self.num_workers, collate_fn=pad_collate)
         return train_loader
 
     def val_dataloader(self):
         val_dataset = psaDataset(self.X_val, self.y_val, seq_len=self.seq_len)
-        val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, collate_fn=pad_collate)
+        val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, collate_fn=pad_collate)
         return val_loader
 
     def test_dataloader(self):
         test_dataset = psaDataset(self.X_test, self.y_test, seq_len=self.seq_len)
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn=pad_collate)
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=self.num_workers, collate_fn=pad_collate)
         return test_loader

@@ -3,7 +3,6 @@ import numpy as np
 
 
 def upload_db(path1, path2, len = 4):
-    print(path1)
     data1 = pd.read_csv(path1).sort_values(by = ["age"])
     data2 = pd.read_csv(path2).sort_values(by=["age"])
     v = data1.ss_number_id.value_counts()
@@ -57,12 +56,3 @@ def concat_data(data1, data2):
     del data["months"]
     print("Number of patients: " + str(data["ss_number_id"].nunique()))
     return data
-
-def extract_timesteps(data, DELTA_FEATURES, DUMMIES):
-    if DELTA_FEATURES is True and DUMMIES is True :
-        feature = "delta_time"
-    elif DUMMIES is True and DELTA_FEATURES is False:
-        feature = "delta_time"
-    else:
-        feature = "age"
-    return data.groupby(["ss_number_id"])[feature].count().max()
