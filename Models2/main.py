@@ -26,5 +26,5 @@ if __name__ == "__main__":
     data1, data2 = assign_target(data1, data2)
     data = concat_data(data1, data2)
     TIMESTEPS = extract_timesteps(data, DELTA_FEATURES)
-    data.to_csv("db/data")
+    data.to_csv("db/data", index = False)
     training_test_part()

@@ -41,6 +41,7 @@ import seaborn as sn
 def extract_n_features():
     data = pd.read_csv("db/data")
     return data.shape[1] - 2
+
 def manage_db(df):
     sequences = []
     label = []
@@ -49,7 +50,7 @@ def manage_db(df):
         sequence_features = group[FEATURES_COLUMNS[1:-1]]
         sequences.append((np.array(sequence_features.values)))
         label.append(group[FEATURES_COLUMNS[-1]].values[0])
-        return np.array(sequences, dtype = "object"), np.array(label)
+    return np.array(sequences, dtype = "object"), np.array(label)
 
 def pad_collate(data):
     """data is a list of tuples with (example, label, length)
@@ -122,7 +123,7 @@ class psaDataModule(pl.LightningDataModule):
             return
         data = pd.read_csv("db/data")
         x,y = manage_db(data)
-        x, test, y, test_y = train_test_split(x, y, test_size=0.95, shuffle=True)
+        x, test, y, test_y = train_test_split(x, y, train_size=0.95, shuffle=True)
         print("SHAPE TRAIN: "+ str(x.shape))
         print("SHAPE TEST: " + str(test.shape))
         X_train, X_val, y_train, y_val = train_test_split(x, y, test_size=0.2, shuffle=True)
@@ -140,15 +141,15 @@ class psaDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         train_dataset = psaDataset(self.X_train, self.y_train, seq_len=self.seq_len)
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, collate_fn=pad_collate)
         return train_loader
 
     def val_dataloader(self):
         val_dataset = psaDataset(self.X_val, self.y_val, seq_len=self.seq_len)
-        val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
+        val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, collate_fn=pad_collate)
         return val_loader
 
     def test_dataloader(self):
         test_dataset = psaDataset(self.X_test, self.y_test, seq_len=self.seq_len)
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers)
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn=pad_collate)
         return test_loader

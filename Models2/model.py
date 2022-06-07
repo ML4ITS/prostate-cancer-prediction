@@ -60,7 +60,7 @@ class LSTMClassification(pl.LightningModule):
     def forward(self, x):
         x, _= self.rnn(x)
         x = self.linear(x[:,-1])
-        return F.log_softmax(x, dim=1)
+        return torch.sigmoid(x)
 
     def configure_optimizers(self):
             return torch.optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=1e-5)
@@ -136,18 +136,19 @@ class LSTMClassification(pl.LightningModule):
 
 def objective(trial: optuna.trial.Trial) -> float:
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
+    num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-5, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
     dropout = trial.suggest_uniform("dropout", 0.1, 0.5)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
     N_FEATURES = extract_n_features()
-    LSTMmodel = LSTMClassification(N_FEATURES, hidden_size, learning_rate, batch_size, dropout, rnn_type, bidirectional)
+    LSTMmodel = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional)
 
     dm = psaDataModule(batch_size=batch_size)
 
     early_stop_callback = EarlyStopping(
-        monitor='val_loss',
+        monitor='valid_loss',
         patience=30,
         verbose=False,
         mode='min'
@@ -160,11 +161,10 @@ def objective(trial: optuna.trial.Trial) -> float:
                          callbacks=[early_stop_callback]
                          )
 
-    hyperparameters_LSTM = dict(hidden_size=hidden_size,
-                                dropout=dropout, learning_rate=learning_rate, batch_size=batch_size,
-                                rnn_type=rnn_type, bidirectional=bidirectional)
-
-    trainer.logger.log_hyperparams(hyperparameters_LSTM)
+    # hyperparameters_LSTM = dict("hyperparameters", hidden_size=hidden_size, num_layers = num_layers, learning_rate=learning_rate, batch_size=batch_size,
+    #                             dropout=dropout, rnn_type=rnn_type, bidirectional=bidirectional)
+    #
+    # trainer.logger.log_hyperparams(hyperparameters_LSTM)
     trainer.fit(LSTMmodel, datamodule=dm)
 
     return trainer.callback_metrics["valid_loss"].item()
@@ -198,6 +198,7 @@ def training_test_part():
     study = hyperparameter_tuning()
     trial = study.best_trial
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
+    num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-5, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
     dropout = trial.suggest_uniform("dropout", 0.1, 0.5)
@@ -205,7 +206,7 @@ def training_test_part():
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
     N_FEATURES = extract_n_features()
 
-    model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, batch_size, dropout, rnn_type, bidirectional)
+    model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional)
     EPOCHS = 100
 
     dm = psaDataModule(batch_size = batch_size)

@@ -45,8 +45,8 @@ def assign_target(data1, data2):
     return data1, data2
 
 def remove_outliers(data):
-    """patients with age>100"""
-    return data.loc[data['age'] > 100]
+    """remove patients with age>=100"""
+    return data.loc[data['age'] < 100]
 
 def concat_data(data1, data2):
     data = pd.concat([data1, data2])
