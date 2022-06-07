@@ -7,10 +7,6 @@ import sys
 
 
 
-
-
-
-
 if __name__ == "__main__":
     _, path1, path2, dummies, delta, type = sys.argv
     data1, data2 = upload_db(path1, path2, len=4)

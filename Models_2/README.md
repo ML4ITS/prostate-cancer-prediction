@@ -41,7 +41,7 @@ The datasets should be saved in *Models2/db* with the names *cancer.csv* and  *n
 
 ##THIRD STEP: Running the code using the Command-Line
 Command Line Arguments:
-1. PATH1: path of the dataset for patients WITH cancer
+1. PATH1: path of the dataset for patients WITH cancer ()
 2. PATH2: path of the dataset for patients WITHOUT cancer
 3. DUMMIES: True / False
 4. DELTA_FEATURES: True / False
@@ -65,3 +65,43 @@ Command Line Arguments:
     python main.py db/cancer.csv db/nocancer.csv True True MLP
 ```
 ***
+
+###TYPE OF PROBLEM
+
+1. Binary classification problem (label 0: no cancer, label 1: cancer)
+
+
+2. Balanced classes (50% patients with cancer, 50% patients without cancer)
+
+
+3. Training set: 95% → 80271 patients Test set: 5% → 4225 patients
+
+
+4. Minimum length for each patient = 4
+
+
+###DIFFERENT TYPES OF INPUT
+
+|age              | psa              | -             | -              |
+|-----------------|------------------|---------------|----------------|
+|  **age**        | **psa**          | **delta_psa** | **delta_time** |
+| **dummies(age)** | **dummies(psa)** | -             | -              |
+| **dummies(age)** | **dummies(psa)** | **delta_psa** | **delta_time** |
+
+*AGE*: age of the patient
+
+*PSA*: real value of the PSA
+
+*DELTA_PSA*: different between PSA at time t and PSA at time t-1
+
+*DELTA_TIME*: different between time t and time t-1 (in months)
+
+
+###DIFFERENT MODELS
+
+*LSTM* 
+
+*CNN1D*
+
+*MLP*
+
