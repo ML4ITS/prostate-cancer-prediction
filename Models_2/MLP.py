@@ -14,33 +14,39 @@ from torch.nn import functional as F
 from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
-from dataset import *
 
+from utils import get_random_numbers
+from dataset import *
+from IPython.display import display
+import random
+
+def getMultiLayerPerceptron(InputNetworkSize, layers,
+                                   hidden_dimension_size, activationFunction, dropout):
+    model = torch.nn.Sequential(
+        torch.nn.Linear(InputNetworkSize, hidden_dimension_size[0]),
+        activationFunction(),
+        nn.Dropout(dropout[0]),)
+    for i in range(layers):
+        model = torch.nn.Sequential(
+            model,
+            torch.nn.Linear(hidden_dimension_size[i], hidden_dimension_size[i+1]),
+            activationFunction(),
+            nn.Dropout(dropout[i+1]),)
+
+    model = torch.nn.Sequential(
+        model, torch.nn.Linear(hidden_dimension_size[-1], 1))
+    return model
 
 class MLPClassification(pl.LightningModule):
 
-    def __init__(self, n_features, timesteps, learning_rate, dropout1, dropout2, dropout3, dropout4, activation, out1, out2, out3, out4):
+    def __init__(self, n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation):
         super(MLPClassification, self).__init__()
         self.learning_rate = learning_rate
         self.criterion = nn.BCELoss()
-        self.flatten = nn.Flatten()
         self.activation = nn.ReLU() if activation == "relu" else nn.Tanh()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(timesteps * n_features, out1),
-            self.activation,
-            nn.Dropout(dropout1),
-            nn.Linear(out1, out2),
-            self.activation,
-            nn.Dropout(dropout2),
-            nn.Linear(out2, out3),
-            self.activation,
-            nn.Dropout(dropout3),
-            nn.Linear(out3, out4),
-            self.activation,
-            nn.Dropout(dropout4),
-            nn.Linear(out4, 1),
-        )
-
+        self.flatten = nn.Flatten()
+        self.linear_act_stack = getMultiLayerPerceptron(n_features * timesteps, layers,
+                                   hidden_dimension_size, activation, dropout)
 
         self.test_F1score = F1Score()
         self.specificity = Specificity()
@@ -50,7 +56,7 @@ class MLPClassification(pl.LightningModule):
 
     def forward(self, x):
         x = self.flatten(x)
-        x = self.linear_relu_stack(x)
+        x = self.linear_act_stack(x)
         return torch.sigmoid(x)
 
     def configure_optimizers(self):
@@ -115,7 +121,7 @@ class MLPClassification(pl.LightningModule):
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
-
+        # cm.figure_.savefig('mlp/conf_mat.png',dpi=300)
         #create ROC curve
         fig = plt.figure(figsize=(7, 6))
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
@@ -123,22 +129,19 @@ class MLPClassification(pl.LightningModule):
         plt.ylabel("true positive rate")
         plt.xlabel("false positive rate")
         plt.show()
+        # plt.savefig("mlp/roc_curve.png")
 
 
 def objective(trial: optuna.trial.Trial) -> float:
-    out1 = trial.suggest_int("out1", 512, 1024, step=32)
-    out2 = trial.suggest_int("out2", 256, 512, step=32)
-    out3 = trial.suggest_int("out3", 128, 256, step=32)
-    out4 = trial.suggest_int("out4", 64, 128, step=32)
+    layers = trial.suggest_int("layers", 1, 15, step=1)
+    dropout = get_random_numbers(layers, trial, 0.1, 0.9, "dropout", int = False, desc = False)
+    hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim")
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
-    dropout1 = trial.suggest_uniform("dropout1", 0.1, 0.8)
-    dropout2 = trial.suggest_uniform("dropout2", 0.1, 0.8)
-    dropout3 = trial.suggest_uniform("dropout3", 0.1, 0.8)
-    dropout4 = trial.suggest_uniform("dropout4", 0.1, 0.8)
     activation = trial.suggest_categorical("activation", ["tanh", "relu"])
     timesteps, n_features = extract_timesteps(), extract_n_features()
-    MLPmodel = MLPClassification(n_features, timesteps, learning_rate, dropout1, dropout2, dropout3, dropout4, activation, out1, out2, out3, out4)
+
+    MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation)
 
     dm = psaDataModule(batch_size=batch_size)
 
@@ -187,19 +190,15 @@ def hyperparameter_tuning():
 def training_test_MLP():
     study = hyperparameter_tuning()
     trial = study.best_trial
-    out1 = trial.suggest_int("out1", 512, 1024, step=32)
-    out2 = trial.suggest_int("out2", 256, 512, step=32)
-    out3 = trial.suggest_int("out3", 128, 256, step=32)
-    out4 = trial.suggest_int("out4", 64, 128, step=32)
+    layers = trial.suggest_int("layers", 1, 15, step=1)
+    dropout = get_random_numbers(layers, trial, 0.1, 0.9, "dropout", int = False, desc = False)
+    hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim")
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
-    dropout1 = trial.suggest_uniform("dropout1", 0.1, 0.8)
-    dropout2 = trial.suggest_uniform("dropout2", 0.1, 0.8)
-    dropout3 = trial.suggest_uniform("dropout3", 0.1, 0.8)
-    dropout4 = trial.suggest_uniform("dropout4", 0.1, 0.8)
     activation = trial.suggest_categorical("activation", ["tanh", "relu"])
     timesteps, n_features = extract_timesteps(), extract_n_features()
-    MLPmodel = MLPClassification(n_features, timesteps, learning_rate, dropout1, dropout2, dropout3, dropout4, activation, out1, out2, out3, out4)
+
+    MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation)
     EPOCHS = 200
 
     dm = psaDataModule(batch_size = batch_size)
@@ -229,6 +228,14 @@ def training_test_MLP():
                         )
     trainer.fit(MLPmodel, datamodule = dm)
     trainer.test(MLPmodel, datamodule=dm)
+    # metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+    # del metrics["step"]
+    # metrics.set_index("epoch", inplace = True)
+    # display(metrics.dropna(axis =1, how = "all").head())
+    # g = sn.relplot(data=metrics, kind = "line")
+    # plt.gcf().set_size_inches(12,4)
+    # plt.grid()
+    # plt.savefig("mlp/table.png")
 
 
 

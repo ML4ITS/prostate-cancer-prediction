@@ -14,12 +14,29 @@ from torch.nn import functional as F
 from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
+from MLP import getMultiLayerPerceptron
+from utils import get_random_numbers
 from dataset import *
+from IPython.display import display
 
+def getConv1d(n_features, layers, hidden_dimension_size, activationFunction, dropout, kernel_size):
+    model = torch.nn.Sequential(
+        nn.Conv1d(n_features, hidden_dimension_size[0], kernel_size=kernel_size[0]),
+        nn.BatchNorm1d(hidden_dimension_size[0]),
+        activationFunction,
+        nn.Dropout(dropout[0]),)
+    for i in range(layers):
+        model = torch.nn.Sequential(
+            model,
+            nn.Conv1d(hidden_dimension_size[i], hidden_dimension_size[i+1], kernel_size=kernel_size[i+1]),
+            nn.BatchNorm1d(hidden_dimension_size[i+1]),
+            activationFunction,
+            nn.Dropout(dropout[i+1]),)
+    return model
 
 class CNN1DClassification(pl.LightningModule):
 
-    def __init__(self, n_features, learning_rate, dropout1, dropout2, dropout3, dropout4, dropout5, activation):
+    def __init__(self, n_features, timesteps, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, kernel_size, layers_m, hidden_dimension_size_m, dropout_m):
         super(CNN1DClassification, self).__init__()
         self.learning_rate = learning_rate
         self.criterion = nn.BCELoss()
@@ -30,51 +47,17 @@ class CNN1DClassification(pl.LightningModule):
         self.preds = []
         self.prob = []
 
-        self.cnn1 = nn.Sequential(
-            nn.Conv1d(n_features, 64, kernel_size=64),
-            nn.BatchNorm1d(64),
-            self.activation,
-            nn.Dropout(dropout1),
-        )
-        self.cnn2 = nn.Sequential(
-            nn.Conv1d(64, 64, kernel_size=32),
-            nn.BatchNorm1d(64),
-            self.activation,
-            nn.Dropout(dropout2),
-        )
-        self.cnn3 = nn.Sequential(
-            nn.Conv1d(64, 128, kernel_size=32),
-            nn.BatchNorm1d(128),
-            self.activation,
-            nn.Dropout(dropout3),
-        )
-
-        self.fc1 = nn.Sequential(
-            nn.Linear(128 * 19, 64),
-            nn.BatchNorm1d(64),
-            self.activation,
-            nn.Dropout(dropout4),
-        )
-        self.fc2 = nn.Sequential(
-            nn.Linear(64, 64),
-            nn.BatchNorm1d(64),
-            self.activation,
-            nn.Dropout(dropout5),
-        )
-        self.fc3 = nn.Sequential(
-            nn.Linear(64, 1),
-        )
+        self.cnn1d = getConv1d(n_features, layers_c, hidden_dimension_size_c, activation, dropout_c, kernel_size)
+        n_channels = self.cnn1d(torch.empty(1,n_features,timesteps)).size(-1)
+        self.flatten = nn.Flatten()
+        self.linear = getMultiLayerPerceptron(n_channels, layers_m, hidden_dimension_size_m, activation, dropout_m)
 
 
     def forward(self, x):
         x = x.permute(0,2,1)
-        x = self.cnn1(x)
-        x = self.cnn2(x)
-        x = self.cnn3(x)
-        x = x.flatten(start_dim=1)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
+        x = self.cnn1d(x)
+        x = self.flatten(x)
+        x = self.linear(x)
         return torch.sigmoid(x)
 
 
@@ -140,7 +123,6 @@ class CNN1DClassification(pl.LightningModule):
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
-
         #create ROC curve
         fig = plt.figure(figsize=(7, 6))
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
@@ -149,19 +131,21 @@ class CNN1DClassification(pl.LightningModule):
         plt.xlabel("false positive rate")
         plt.show()
 
-
 def objective(trial: optuna.trial.Trial) -> float:
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
-    dropout1 = trial.suggest_uniform("dropout1", 0.1, 0.8)
-    dropout2 = trial.suggest_uniform("dropout2", 0.1, 0.8)
-    dropout3 = trial.suggest_uniform("dropout3", 0.1, 0.8)
-    dropout4 = trial.suggest_uniform("dropout4", 0.1, 0.8)
-    dropout5 = trial.suggest_uniform("dropout5", 0.1, 0.8)
+    layers_c = trial.suggest_int("layers", 1, 15, step=1)
+    dropout_c = get_random_numbers(layers_c, trial, 0.1, 0.9, "dropout_c", int = False, desc = False)
+    hidden_dimension_size_c = get_random_numbers(layers_c, trial, 32, 1024, "hidden_dim_c", desc = False)
+    kernel_size = get_random_numbers(layers_c, trial, 1, 7, "kernel")
+    #--------------#
+    layers_m = trial.suggest_int("layers_m", 1, 15, step=1)
+    dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
+    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 32, 1024, "hidden_dim_m")
     activation = trial.suggest_categorical("activation", ["tanh", "relu"])
-    n_features = extract_n_features()
+    timesteps, n_features = extract_timesteps(), extract_n_features()
 
-    MLPmodel = CNN1DClassification(n_features, learning_rate, dropout1, dropout2, dropout3, dropout4, dropout5, activation)
+    model = CNN1DClassification(n_features,timesteps, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, kernel_size, layers_m, hidden_dimension_size_m, dropout_m)
 
     dm = psaDataModule(batch_size=batch_size)
 
@@ -178,7 +162,7 @@ def objective(trial: optuna.trial.Trial) -> float:
     trainer = pl.Trainer(max_epochs= EPOCHS,
                          callbacks=[early_stop_callback])
 
-    trainer.fit(MLPmodel, datamodule=dm)
+    trainer.fit(model, datamodule=dm)
 
     return trainer.callback_metrics["valid_loss"].item()
 
@@ -212,15 +196,18 @@ def training_test_CNN1D():
     trial = study.best_trial
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
-    dropout1 = trial.suggest_uniform("dropout1", 0.1, 0.8)
-    dropout2 = trial.suggest_uniform("dropout2", 0.1, 0.8)
-    dropout3 = trial.suggest_uniform("dropout3", 0.1, 0.8)
-    dropout4 = trial.suggest_uniform("dropout4", 0.1, 0.8)
-    dropout5 = trial.suggest_uniform("dropout5", 0.1, 0.8)
+    layers_c = trial.suggest_int("layers", 1, 15, step=1)
+    dropout_c = get_random_numbers(layers_c, trial, 0.1, 0.9, "dropout_c", int = False, desc = False)
+    hidden_dimension_size_c = get_random_numbers(layers_c, trial, 32, 1024, "hidden_dim_c", desc = False)
+    kernel_size = get_random_numbers(layers_c, trial, 1, 7, "kernel")
+    #--------------#
+    layers_m = trial.suggest_int("layers_m", 1, 15, step=1)
+    dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
+    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 32, 1024, "hidden_dim_m")
     activation = trial.suggest_categorical("activation", ["tanh", "relu"])
-    n_features = extract_n_features()
+    timesteps, n_features = extract_timesteps(), extract_n_features()
 
-    MLPmodel = CNN1DClassification(n_features, learning_rate, dropout1, dropout2, dropout3, dropout4, dropout5, activation)
+    model = CNN1DClassification(n_features,timesteps, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, kernel_size, layers_m, hidden_dimension_size_m, dropout_m)
     EPOCHS = 200
 
     dm = psaDataModule(batch_size = batch_size)
@@ -248,8 +235,18 @@ def training_test_CNN1D():
                         logger=logger,
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )
-    trainer.fit(MLPmodel, datamodule = dm)
-    trainer.test(MLPmodel, datamodule=dm)
+    trainer.fit(model, datamodule = dm)
+    torch.save(model, "cnn1d/model")
+    cnn1d_model = torch.load("cnn1d/model")
+    trainer.test(cnn1d_model, datamodule=dm)
+    metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+    del metrics["step"]
+    metrics.set_index("epoch", inplace = True)
+    display(metrics.dropna(axis =1, how = "all").head())
+    g = sn.relplot(data=metrics, kind = "line")
+    plt.gcf().set_size_inches(12,4)
+    plt.grid()
+    plt.savefig("cnn1d/table")
 
 
 

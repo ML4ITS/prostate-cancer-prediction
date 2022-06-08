@@ -15,6 +15,8 @@ from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
 from dataset import *
+from IPython.display import display
+
 
 
 class LSTMClassification(pl.LightningModule):
@@ -124,7 +126,6 @@ class LSTMClassification(pl.LightningModule):
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
-
         #create ROC curve
         fig = plt.figure(figsize=(7, 6))
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
@@ -132,6 +133,7 @@ class LSTMClassification(pl.LightningModule):
         plt.ylabel("true positive rate")
         plt.xlabel("false positive rate")
         plt.show()
+        # plt.savefig("lstm/roc_curve.png")
 
 
 def objective(trial: optuna.trial.Trial) -> float:
@@ -154,7 +156,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 100
+    EPOCHS = 2
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -165,7 +167,7 @@ def objective(trial: optuna.trial.Trial) -> float:
     return trainer.callback_metrics["valid_loss"].item()
 
 def hyperparameter_tuning():
-    N_TRIALS = 100
+    N_TRIALS = 2
     study = optuna.create_study(direction="minimize", pruner=optuna.pruners.MedianPruner())
     study.optimize(objective, n_trials= N_TRIALS)
 
@@ -192,17 +194,17 @@ def hyperparameter_tuning():
 def training_test_LSTM():
     study = hyperparameter_tuning()
     trial = study.best_trial
-    hidden_size = trial.suggest_int("hidden_size", 64, 1024, step=32)
+    hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
     num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-5, 1e-2)
-    batch_size = trial.suggest_int("batch_size", 32, 512, step=32)
-    dropout = trial.suggest_uniform("dropout", 0.1, 0.8)
+    batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
+    dropout = trial.suggest_uniform("dropout", 0.1, 0.5)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
     N_FEATURES = extract_n_features()
-
+    print("------------STARTING TRAINING PART------------")
     model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional)
-    EPOCHS = 200
+    EPOCHS = 5
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -230,8 +232,19 @@ def training_test_LSTM():
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )
     trainer.fit(model, datamodule = dm)
-    trainer.test(model, datamodule=dm)
-
+    torch.save(model, "lstm/model")
+    lstm_model = torch.load( "lstm/model")
+    print("------------STARTING TEST PART------------")
+    trainer.test(lstm_model, datamodule=dm)
+    print("------------FINISH TEST PART------------")
+    # metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+    # del metrics["step"]
+    # metrics.set_index("epoch", inplace = True)
+    # display(metrics.dropna(axis =1, how = "all").head())
+    # g = sn.relplot(data=metrics, kind = "line")
+    # plt.gcf().set_size_inches(12,4)
+    # plt.grid()
+    # plt.savefig("lstm/table.png")
 
 
 

@@ -8,25 +8,28 @@ import sys
 
 
 if __name__ == "__main__":
-    _, path1, path2, dummies, delta, type = sys.argv
+    # _, path1, path2, dummies, delta, type = sys.argv
+    # dummies = True
+    # delta = False
+    type = "MLP"
+    # data1, data2 = upload_db("db/cancer.csv", "db/nocancer.csv", len=4)
+    # # data1, data2 = remove_outliers(data1), remove_outliers(data2)
+    #
+    # if dummies is True:
+    #     data1, data2 = get_dummies_data(data1), get_dummies_data(data2)
+    # if delta is True:
+    #     data1, data2 = delta_features(data1), delta_features(data2)
+    # if dummies is True:
+    #     data1, data2 = delete_columns(data1), delete_columns(data2)
+    #
+    # # data2 = balance_db(data1, data2)
+    #
+    # data1, data2 = assign_target(data1, data2)
+    #
+    # data = concat_data(data1, data2)
+    #
+    # data.to_csv("db/data.csv", index = False)
 
-    data1, data2 = upload_db(path1, path2, len=4)
-    data1, data2 = remove_outliers(data1), remove_outliers(data2)
-
-    if dummies:
-        data1, data2 = dummies(data1), dummies(data2)
-    if delta:
-        data1, data2 = delta_features(data1), delta_features(data2)
-    if dummies:
-        data1, data2 = delete_columns(data1), delete_columns(data2)
-
-    data2 = balance_db(data1, data2)
-
-    data1, data2 = assign_target(data1, data2)
-
-    data = concat_data(data1, data2)
-
-    data.to_csv("db/data", index = False)
     #models
     if type == "LSTM":
         training_test_LSTM()

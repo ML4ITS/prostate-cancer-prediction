@@ -40,13 +40,13 @@ import seaborn as sn
 
 def extract_timesteps():
     """extract the maximum timesteps"""
-    data = pd.read_csv("db/data")
+    data = pd.read_csv("db/data.csv")
     return data.groupby(["ss_number_id"]).count().max()[0]
 
 def extract_n_features():
     """extract the total number of features from data
     data.shape[1] - 2 because I dont consider the target and the id"""
-    data = pd.read_csv("db/data")
+    data = pd.read_csv("db/data.csv")
     return data.shape[1] - 2
 
 def manage_db(df):
@@ -125,7 +125,7 @@ class psaDataModule(pl.LightningDataModule):
             return
         if stage is None and self.X_train is not None and self.X_test is not None:
             return
-        data = pd.read_csv("db/data")
+        data = pd.read_csv("db/data.csv")
         x,y = manage_db(data)
         x, test, y, test_y = train_test_split(x, y, train_size=0.95, shuffle=True)
         print("SHAPE TRAIN: "+ str(x.shape))

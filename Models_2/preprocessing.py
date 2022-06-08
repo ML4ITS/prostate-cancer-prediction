@@ -1,6 +1,17 @@
 import pandas as pd
 import numpy as np
 
+def upload_db_new(path1, path2, len = 4):
+    """read the two dbs and select patients with a minimum number of values"""
+    data1 = pd.read_csv(path1).sort_values(by = ["age"])
+    data2 = pd.read_csv(path2).sort_values(by=["age"])
+    v = data1.ss_number_id.value_counts()
+    data1 = data1[data1.ss_number_id.isin(v.index[v.gt(len)])]
+    v = data2.ss_number_id.value_counts()
+    data2 = data2[data2.ss_number_id.isin(v.index[v.gt(len)])]
+    print("Number of patients with cancer: "+ str(data1["ss_number_id"].nunique()))
+    print("Number of patients without cancer: "+ str(data2["ss_number_id"].nunique()))
+    return data1, data2
 
 def upload_db(path1, path2, len = 4):
     """read the two dbs and select patients with a minimum number of values"""
@@ -14,7 +25,7 @@ def upload_db(path1, path2, len = 4):
     print("Number of patients without cancer: "+ str(data2["ss_number_id"].nunique()))
     return data1, data2
 
-def dummies(data):
+def get_dummies_data(data):
     """dummies for features age and psa"""
     bins1 = [0, 30, 40, 50, 60, 70, 80, 120] #for age
     bins2 = [0, 4, 10, 2000] #for psa
@@ -53,7 +64,7 @@ def remove_outliers(data):
     return data.loc[data['age'] < 100]
 
 def concat_data(data1, data2):
-    #union of the two dbs
+    """union of the two dbs"""
     data = pd.concat([data1, data2])
     data = data.sort_values(by = ["months"])
     del data["ambiguous_date"]
