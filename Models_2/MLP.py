@@ -14,23 +14,22 @@ from torch.nn import functional as F
 from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
-
-from utils import get_random_numbers
+import matplotlib.pyplot as plt
+from utils import get_random_numbers, save_evaluation_metric, plot_accuracy_loss
 from dataset import *
-from IPython.display import display
 import random
 
 def getMultiLayerPerceptron(InputNetworkSize, layers,
                                    hidden_dimension_size, activationFunction, dropout):
     model = torch.nn.Sequential(
         torch.nn.Linear(InputNetworkSize, hidden_dimension_size[0]),
-        activationFunction(),
+        activationFunction,
         nn.Dropout(dropout[0]),)
     for i in range(layers):
         model = torch.nn.Sequential(
             model,
             torch.nn.Linear(hidden_dimension_size[i], hidden_dimension_size[i+1]),
-            activationFunction(),
+            activationFunction,
             nn.Dropout(dropout[i+1]),)
 
     model = torch.nn.Sequential(
@@ -46,7 +45,7 @@ class MLPClassification(pl.LightningModule):
         self.activation = nn.ReLU() if activation == "relu" else nn.Tanh()
         self.flatten = nn.Flatten()
         self.linear_act_stack = getMultiLayerPerceptron(n_features * timesteps, layers,
-                                   hidden_dimension_size, activation, dropout)
+                                   hidden_dimension_size, self.activation, dropout)
 
         self.test_F1score = F1Score()
         self.specificity = Specificity()
@@ -102,34 +101,33 @@ class MLPClassification(pl.LightningModule):
         preds = (preds>0.5).float()
         self.target.extend(y.numpy())
         self.preds.extend((preds.numpy()))
-        acc = accuracy(preds, y)
+        self.acc = accuracy(preds, y)
         self.test_F1score.update(preds,y)
         self.specificity.update(preds,y)
-        precision, recall = precision_recall(preds,y, average = "micro")
+        self.precision, self.recall = precision_recall(preds,y, average = "micro")
         self.log('test_loss', loss, prog_bar=True)
-        self.log('test_acc', acc, prog_bar=True)
+        self.log('test_acc', self.acc, prog_bar=True)
         self.log('f1 score', self.test_F1score)
-        self.log('precision', precision)
-        self.log('recall', recall)
+        self.log('precision', self.precision)
+        self.log('recall', self.recall)
         self.log('specificity', self.specificity)
         return loss
 
 
     def test_epoch_end(self, outputs):
+        save_evaluation_metric("mlp", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute())
         #confusion matrix
-        fig = plt.figure(figsize = (7,6))
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
-        # cm.figure_.savefig('mlp/conf_mat.png',dpi=300)
+        disp.figure_.savefig('mlp/conf_mat.png',dpi=300)
         #create ROC curve
-        fig = plt.figure(figsize=(7, 6))
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
         plt.plot(fpr, tpr)
         plt.ylabel("true positive rate")
         plt.xlabel("false positive rate")
-        plt.show()
-        # plt.savefig("mlp/roc_curve.png")
+        plt.savefig("mlp/roc_curve.png")
+
 
 
 def objective(trial: optuna.trial.Trial) -> float:
@@ -152,7 +150,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 100
+    EPOCHS = 1
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -163,7 +161,7 @@ def objective(trial: optuna.trial.Trial) -> float:
     return trainer.callback_metrics["valid_loss"].item()
 
 def hyperparameter_tuning():
-    N_TRIALS = 100
+    N_TRIALS = 2
     study = optuna.create_study(direction="minimize", pruner=optuna.pruners.MedianPruner())
     study.optimize(objective, n_trials= N_TRIALS)
 
@@ -199,7 +197,7 @@ def training_test_MLP():
     timesteps, n_features = extract_timesteps(), extract_n_features()
 
     MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation)
-    EPOCHS = 200
+    EPOCHS = 5
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -207,7 +205,7 @@ def training_test_MLP():
                         save_top_k=1,
                         save_last=True,
                         save_weights_only=True,
-                        filename='Models2/checkpoint/{epoch:02d}-{val_loss:.4f}',
+                        filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
                         verbose=False,
                         mode='min')
 
@@ -217,7 +215,7 @@ def training_test_MLP():
        verbose=False,
        mode='min'
     )
-    logger = CSVLogger(save_dir="Models2/logs/")
+    logger = CSVLogger(save_dir="/logs/")
 
     trainer = pl.Trainer(
                         accelerator="auto",
@@ -227,15 +225,11 @@ def training_test_MLP():
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )
     trainer.fit(MLPmodel, datamodule = dm)
-    trainer.test(MLPmodel, datamodule=dm)
-    # metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
-    # del metrics["step"]
-    # metrics.set_index("epoch", inplace = True)
-    # display(metrics.dropna(axis =1, how = "all").head())
-    # g = sn.relplot(data=metrics, kind = "line")
-    # plt.gcf().set_size_inches(12,4)
-    # plt.grid()
-    # plt.savefig("mlp/table.png")
+    torch.save(MLPmodel, "mlp/model")
+    model = torch.load( "mlp/model")
+    trainer.test(model, datamodule=dm)
+    plot_accuracy_loss("mlp",trainer)
+
 
 
 

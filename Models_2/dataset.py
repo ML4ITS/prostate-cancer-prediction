@@ -101,12 +101,12 @@ class psaDataset(Dataset):
         return (x,y, x.shape[0])
 
 class psaDataModule(pl.LightningDataModule):
-    def __init__(self, seq_len=1, batch_size=128, num_workers=0):
+    def __init__(self, seq_len=1, batch_size=128):
 
         super().__init__()
         self.seq_len = seq_len
         self.batch_size = batch_size
-        self.num_workers = num_workers
+        self.num_workers = 0
         self.X_train = None
         self.y_train = None
         self.X_val = None
@@ -127,7 +127,7 @@ class psaDataModule(pl.LightningDataModule):
             return
         data = pd.read_csv("db/data.csv")
         x,y = manage_db(data)
-        x, test, y, test_y = train_test_split(x, y, train_size=0.95, shuffle=True)
+        x, test, y, test_y = train_test_split(x, y, train_size=0.8, shuffle=True)
         print("SHAPE TRAIN: "+ str(x.shape))
         print("SHAPE TEST: " + str(test.shape))
         X_train, X_val, y_train, y_val = train_test_split(x, y, test_size=0.2, shuffle=True)
@@ -145,15 +145,15 @@ class psaDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         train_dataset = psaDataset(self.X_train, self.y_train, seq_len=self.seq_len)
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, num_workers=self.num_workers, collate_fn=pad_collate)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, collate_fn=pad_collate, num_workers=self.num_workers)
         return train_loader
 
     def val_dataloader(self):
         val_dataset = psaDataset(self.X_val, self.y_val, seq_len=self.seq_len)
-        val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, collate_fn=pad_collate)
+        val_loader = DataLoader(val_dataset, batch_size=self.batch_size, collate_fn=pad_collate, num_workers=self.num_workers)
         return val_loader
 
     def test_dataloader(self):
         test_dataset = psaDataset(self.X_test, self.y_test, seq_len=self.seq_len)
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=self.num_workers, collate_fn=pad_collate)
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, collate_fn=pad_collate, num_workers=self.num_workers)
         return test_loader

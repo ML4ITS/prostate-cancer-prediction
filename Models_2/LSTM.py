@@ -14,6 +14,8 @@ from torch.nn import functional as F
 from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
+
+from utils import save_evaluation_metric, plot_accuracy_loss
 from dataset import *
 from IPython.display import display
 
@@ -107,33 +109,34 @@ class LSTMClassification(pl.LightningModule):
         preds = (preds>0.5).float()
         self.target.extend(y.numpy())
         self.preds.extend((preds.numpy()))
-        acc = accuracy(preds, y)
+        self.acc = accuracy(preds, y)
         self.test_F1score.update(preds,y)
         self.specificity.update(preds,y)
-        precision, recall = precision_recall(preds,y, average = "micro")
+        self.precision, self.recall = precision_recall(preds,y, average = "micro")
         self.log('test_loss', loss, prog_bar=True)
-        self.log('test_acc', acc, prog_bar=True)
+        self.log('test_acc', self.acc, prog_bar=True)
         self.log('f1 score', self.test_F1score)
-        self.log('precision', precision)
-        self.log('recall', recall)
+        self.log('precision', self.precision)
+        self.log('recall', self.recall)
         self.log('specificity', self.specificity)
         return loss
 
 
     def test_epoch_end(self, outputs):
-        #confusion matrix
-        fig = plt.figure(figsize = (7,6))
+        save_evaluation_metric("lstm", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute())
+        # #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
+        disp.figure_.savefig('lstm/conf_mat.png',dpi=300)
         #create ROC curve
-        fig = plt.figure(figsize=(7, 6))
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
         plt.plot(fpr, tpr)
         plt.ylabel("true positive rate")
         plt.xlabel("false positive rate")
-        plt.show()
-        # plt.savefig("lstm/roc_curve.png")
+        plt.savefig("lstm/roc_curve.png")
+
+
 
 
 def objective(trial: optuna.trial.Trial) -> float:
@@ -156,7 +159,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 2
+    EPOCHS = 1
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -204,7 +207,7 @@ def training_test_LSTM():
     N_FEATURES = extract_n_features()
     print("------------STARTING TRAINING PART------------")
     model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional)
-    EPOCHS = 5
+    EPOCHS = 2
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -212,7 +215,7 @@ def training_test_LSTM():
                         save_top_k=1,
                         save_last=True,
                         save_weights_only=True,
-                        filename='Models2/checkpoint/{epoch:02d}-{val_loss:.4f}',
+                        filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
                         verbose=False,
                         mode='min')
 
@@ -222,7 +225,7 @@ def training_test_LSTM():
        verbose=False,
        mode='min'
     )
-    logger = CSVLogger(save_dir="Models2/logs/")
+    logger = CSVLogger(save_dir="logs/")
 
     trainer = pl.Trainer(
                         accelerator="auto",
@@ -236,15 +239,8 @@ def training_test_LSTM():
     lstm_model = torch.load( "lstm/model")
     print("------------STARTING TEST PART------------")
     trainer.test(lstm_model, datamodule=dm)
+    plot_accuracy_loss("lstm", trainer)
     print("------------FINISH TEST PART------------")
-    # metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
-    # del metrics["step"]
-    # metrics.set_index("epoch", inplace = True)
-    # display(metrics.dropna(axis =1, how = "all").head())
-    # g = sn.relplot(data=metrics, kind = "line")
-    # plt.gcf().set_size_inches(12,4)
-    # plt.grid()
-    # plt.savefig("lstm/table.png")
 
 
 
