@@ -30,7 +30,7 @@ if __name__ == "__main__":
     if dummies is True:
         data1, data2 = delete_columns(data1), delete_columns(data2)
 
-    # data2 = balance_db(data1, data2)
+    data2 = balance_db(data1, data2, p.balanced)
 
     data1, data2 = assign_target(data1, data2)
 

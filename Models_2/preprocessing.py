@@ -48,7 +48,9 @@ def delete_columns(data):
     del data["psa"]
     return data
 
-def balance_db(data1, data2):
+def balance_db(data1, data2, balanced):
+    if balanced is not True:
+        return data2
     n = data2["ss_number_id"].unique()
     id = np.random.choice(n, size = len(data1["ss_number_id"].unique()), replace = False)
     data2 = data2.loc[data2["ss_number_id"].isin((id))]
