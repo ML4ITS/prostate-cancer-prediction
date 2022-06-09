@@ -2,3 +2,4 @@ trials: 2 #number of trials for hyperparameter tuning
 
 epochs: 10 #number of epochs for the traning part
 
+balanced : False #True: balanced db / False: unbalanced db
