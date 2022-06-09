@@ -45,24 +45,24 @@ Command Line Arguments:
 2. PATH2: path of the dataset for patients WITHOUT cancer
 3. DUMMIES: True / False
 4. DELTA_FEATURES: True / False
-5. TYPE: LSTM / CNN1D / MLP
+5. TYPE: lstm / cnn1d / mlp
  
 ***Scripts to be run***:
 ```bash
-    python main.py db/cancer.csv db/nocancer.csv True False LSTM
-    python main.py db/cancer.csv db/nocancer.csv False True LSTM
-    python main.py db/cancer.csv db/nocancer.csv False False LSTM
-    python main.py db/cancer.csv db/nocancer.csv True True LSTM
+    python main.py db/cancer.csv db/nocancer.csv True False lstm
+    python main.py db/cancer.csv db/nocancer.csv False True lstm
+    python main.py db/cancer.csv db/nocancer.csv False False lstm
+    python main.py db/cancer.csv db/nocancer.csv True True lstm
     
-    python main.py db/cancer.csv db/nocancer.csv True False CNN1D
-    python main.py db/cancer.csv db/nocancer.csv False True CNN1D
-    python main.py db/cancer.csv db/nocancer.csv False False CNN1D
-    python main.py db/cancer.csv db/nocancer.csv True True CNN1D
+    python main.py db/cancer.csv db/nocancer.csv True False cnn1d
+    python main.py db/cancer.csv db/nocancer.csv False True cnn1d
+    python main.py db/cancer.csv db/nocancer.csv False False cnn1d
+    python main.py db/cancer.csv db/nocancer.csv True True cnn1d
     
-    python main.py db/cancer.csv db/nocancer.csv True False MLP
-    python main.py db/cancer.csv db/nocancer.csv False True MLP
-    python main.py db/cancer.csv db/nocancer.csv False False MLP
-    python main.py db/cancer.csv db/nocancer.csv True True MLP
+    python main.py db/cancer.csv db/nocancer.csv True False mlp
+    python main.py db/cancer.csv db/nocancer.csv False True mlp
+    python main.py db/cancer.csv db/nocancer.csv False False mlp
+    python main.py db/cancer.csv db/nocancer.csv True True mlp
 ```
 ***
 ##FOURTH STEP: Results to download

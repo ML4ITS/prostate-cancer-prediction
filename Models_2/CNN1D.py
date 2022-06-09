@@ -64,7 +64,6 @@ class CNN1DClassification(pl.LightningModule):
 
     def forward(self, x):
         x = x.permute(0,2,1)
-        print(x.shape)
         x = self.cnn1d(x)
         x = self.linear(x)
         return x
@@ -135,6 +134,7 @@ class CNN1DClassification(pl.LightningModule):
         disp.plot()
         disp.figure_.savefig('cnn1d/conf_mat.png',dpi=300)
         #create ROC curve
+        plt.clf()
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
         plt.plot(fpr, tpr)
         plt.ylabel("true positive rate")
@@ -168,7 +168,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 3
+    EPOCHS = 1
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -178,10 +178,9 @@ def objective(trial: optuna.trial.Trial) -> float:
 
     return trainer.callback_metrics["valid_loss"].item()
 
-def hyperparameter_tuning():
-    N_TRIALS = 200
+def hyperparameter_tuning(trials):
     study = optuna.create_study(direction="minimize", pruner=optuna.pruners.MedianPruner())
-    study.optimize(objective, n_trials= N_TRIALS)
+    study.optimize(objective, n_trials= trials)
 
     pruned_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.PRUNED]
     complete_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.COMPLETE]
@@ -203,8 +202,8 @@ def hyperparameter_tuning():
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_CNN1D():
-    study = hyperparameter_tuning()
+def training_test_CNN1D(epochs, trials):
+    study = hyperparameter_tuning(trials)
     trial = study.best_trial
     n_features = extract_n_features()
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
@@ -221,8 +220,6 @@ def training_test_CNN1D():
 
 
     model = CNN1DClassification(n_features, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding)
-
-    EPOCHS = 20
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -245,7 +242,7 @@ def training_test_CNN1D():
     trainer = pl.Trainer(
                         accelerator="auto",
                         devices = 1 if torch.cuda.is_available() else None,
-                        max_epochs=EPOCHS,
+                        max_epochs=epochs,
                         logger=logger,
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )

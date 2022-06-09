@@ -132,6 +132,7 @@ class LSTMClassification(pl.LightningModule):
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
         disp.figure_.savefig('lstm/conf_mat.png',dpi=300)
+        plt.clf()
         #create ROC curve
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
         plt.plot(fpr, tpr)
@@ -177,10 +178,9 @@ def objective(trial: optuna.trial.Trial) -> float:
 
     return trainer.callback_metrics["valid_loss"].item()
 
-def hyperparameter_tuning():
-    N_TRIALS = 2
+def hyperparameter_tuning(trials):
     study = optuna.create_study(direction="minimize", pruner=optuna.pruners.MedianPruner())
-    study.optimize(objective, n_trials= N_TRIALS)
+    study.optimize(objective, n_trials= trials)
 
     pruned_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.PRUNED]
     complete_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.COMPLETE]
@@ -202,8 +202,8 @@ def hyperparameter_tuning():
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_LSTM():
-    study = hyperparameter_tuning()
+def training_test_LSTM(epochs, trials):
+    study = hyperparameter_tuning(trials)
     trial = study.best_trial
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
     num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
@@ -220,7 +220,6 @@ def training_test_LSTM():
     N_FEATURES = extract_n_features()
 
     model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m)
-    EPOCHS = 2
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -243,7 +242,7 @@ def training_test_LSTM():
     trainer = pl.Trainer(
                         accelerator="auto",
                         devices = 1 if torch.cuda.is_available() else None,
-                        max_epochs=EPOCHS,
+                        max_epochs=epochs,
                         logger=logger,
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )

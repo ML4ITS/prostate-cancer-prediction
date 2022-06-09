@@ -1,6 +1,7 @@
 from LSTM import training_test_LSTM
 from MLP import training_test_MLP
 from CNN1D import training_test_CNN1D
+from config_file.config_parser import Data
 from utils import str2bool
 from preprocessing import *
 import sys
@@ -9,11 +10,12 @@ import sys
 
 
 if __name__ == "__main__":
+    #parameter from command line
     _, path1, path2, dummies, delta, type = sys.argv
     dummies, delta = str2bool(dummies), str2bool(delta)
-    print(dummies)
-    print(delta)
-    print(type)
+
+    p = Data() #get parameters
+    p.extractData()
 
     # dummies = False
     # delta = False
@@ -37,9 +39,9 @@ if __name__ == "__main__":
     data.to_csv("db/data.csv", index = False)
 
     #models
-    if type == "LSTM":
-        training_test_LSTM()
-    elif type == "MLP":
-        training_test_MLP()
+    if type == "lstm":
+        training_test_LSTM(p.epochs, p.trials)
+    elif type == "mlp":
+        training_test_MLP(p.epochs, p.trials)
     else: #CNN1D
-        training_test_CNN1D()
+        training_test_CNN1D(p.epochs, p.trials)
