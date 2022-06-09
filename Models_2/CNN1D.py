@@ -15,46 +15,62 @@ from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
 from MLP import getMultiLayerPerceptron
-from utils import get_random_numbers, save_evaluation_metric, plot_accuracy_loss
+from utils import get_random_numbers, save_evaluation_metric, plot_accuracy_loss, dispatcher
 from dataset import *
 from IPython.display import display
 
-def getConv1d(n_features, layers, hidden_dimension_size, activationFunction, dropout, kernel_size, stride):
+def get_Kernel_Stride(input_size, output_size,padding):
+    # Stride = (input_size // output_size)
+    # Kernel = input_size - (output_size - 1) * Stride
+    Kernel = 2 * padding + input_size + 1 - output_size
+    return Kernel
+
+
+
+def getConv1d(n_features, layers, hidden_dimension_size, activationFunction, dropout, padding):
+    Kernel= get_Kernel_Stride(n_features, hidden_dimension_size[0], padding[0])
     model = torch.nn.Sequential(
-        nn.Conv1d(n_features, hidden_dimension_size[0], kernel_size=kernel_size[0], stride = stride[0]),
+        nn.Conv1d(in_channels = n_features, out_channels=hidden_dimension_size[0], kernel_size=Kernel, padding=padding[0]),
         nn.BatchNorm1d(hidden_dimension_size[0]),
         activationFunction,
+        nn.AvgPool1d(hidden_dimension_size[0]),
         nn.Dropout(dropout[0]),)
     for i in range(layers):
+        Kernel= get_Kernel_Stride(hidden_dimension_size[i], hidden_dimension_size[i+1], padding[i+1])
+        if(Kernel<0):
+            print("Kernel:  " + str(Kernel))
+            print(c)
         model = torch.nn.Sequential(
             model,
-            nn.Conv1d(hidden_dimension_size[i], hidden_dimension_size[i+1], kernel_size=kernel_size[i+1], stride = stride[i+1]),
+            nn.Conv1d(in_channels = hidden_dimension_size[i], out_channels=hidden_dimension_size[i+1], kernel_size = Kernel,  padding=padding[0]),
             nn.BatchNorm1d(hidden_dimension_size[i+1]),
             activationFunction,
+            nn.AvgPool1d(hidden_dimension_size[i+1]),
             nn.Dropout(dropout[i+1]),)
     model = torch.nn.Sequential(model, torch.nn.Flatten())
     return model
 
 class CNN1DClassification(pl.LightningModule):
 
-    def __init__(self, n_features, timesteps, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, kernel_size, layers_m, hidden_dimension_size_m, dropout_m, stride):
+    def __init__(self, n_features, timesteps, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding):
         super(CNN1DClassification, self).__init__()
         self.learning_rate = learning_rate
         self.criterion = nn.BCEWithLogitsLoss()
-        self.activation = nn.ReLU() if activation == "relu" else nn.Tanh()
+        self.activation = dispatcher[activation]
         self.test_F1score = F1Score()
         self.specificity = Specificity()
         self.target = []
         self.preds = []
         self.prob = []
 
-        self.cnn1d = getConv1d(n_features, layers_c, hidden_dimension_size_c, self.activation, dropout_c, kernel_size, stride)
-        n_channels = self.cnn1d(torch.empty(1,n_features,timesteps)).size(-1)
-        self.linear = getMultiLayerPerceptron(n_channels, layers_m, hidden_dimension_size_m, self.activation, dropout_m)
+        self.cnn1d = getConv1d(n_features, layers_c, hidden_dimension_size_c, self.activation, dropout_c, padding)
+
+        self.linear = getMultiLayerPerceptron(None, layers_m, hidden_dimension_size_m, self.activation, dropout_m)
 
 
     def forward(self, x):
         x = x.permute(0,2,1)
+        print(x.shape)
         x = self.cnn1d(x)
         x = self.linear(x)
         return x
@@ -132,22 +148,22 @@ class CNN1DClassification(pl.LightningModule):
         plt.savefig("cnn1d/roc_curve.png")
 
 def objective(trial: optuna.trial.Trial) -> float:
+    timesteps, n_features = extract_timesteps(), extract_n_features()
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
     layers_c = trial.suggest_int("layers", 1, 15, step=1)
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
     dropout_c = get_random_numbers(layers_c, trial, 0.1, 0.9, "dropout_c", int = False, desc = False)
-    hidden_dimension_size_c = get_random_numbers(layers_c, trial, 64, 1024, "hidden_dim_c", desc = False)
-    kernel_size = get_random_numbers(layers_c, trial, 2, 7, "kernel")
-    # padding = get_random_numbers(layers_c, trial, 0, 2, "padding")
-    stride = get_random_numbers(layers_c, trial, 1, 3, "stride")
-    #--------------#
-    layers_m = trial.suggest_int("layers_m", 1, 5, step=1)
+    n_filters = get_random_numbers(layers_c, trial, 1, n_features-1, "n_filters", desc = True)
+    padding = get_random_numbers(layers_c, trial, 0, 2, "padding")
+    # parameters for linear layers
+    layers_m = trial.suggest_int("layers_m", 1, 7, step=1)
     dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
-    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 512, 1024, "hidden_dim_m")
-    activation = trial.suggest_categorical("activation", ["tanh", "relu"])
-    timesteps, n_features = extract_timesteps(), extract_n_features()
+    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m",step=64)
 
-    model = CNN1DClassification(n_features,timesteps, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, kernel_size, layers_m, hidden_dimension_size_m, dropout_m,  stride)
+
+
+    model = CNN1DClassification(n_features,timesteps, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding)
 
     dm = psaDataModule(batch_size=batch_size)
 
@@ -158,7 +174,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 1
+    EPOCHS = 3
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -169,7 +185,7 @@ def objective(trial: optuna.trial.Trial) -> float:
     return trainer.callback_metrics["valid_loss"].item()
 
 def hyperparameter_tuning():
-    N_TRIALS = 2
+    N_TRIALS = 200
     study = optuna.create_study(direction="minimize", pruner=optuna.pruners.MedianPruner())
     study.optimize(objective, n_trials= N_TRIALS)
 
@@ -196,23 +212,23 @@ def hyperparameter_tuning():
 def training_test_CNN1D():
     study = hyperparameter_tuning()
     trial = study.best_trial
+    timesteps, n_features = extract_timesteps(), extract_n_features()
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
     layers_c = trial.suggest_int("layers", 1, 15, step=1)
     dropout_c = get_random_numbers(layers_c, trial, 0.1, 0.9, "dropout_c", int = False, desc = False)
-    hidden_dimension_size_c = get_random_numbers(layers_c, trial, 64, 1024, "hidden_dim_c", desc = False)
-    kernel_size = get_random_numbers(layers_c, trial, 2, 7, "kernel")
-    # padding = get_random_numbers(layers_c, trial, 0, 0, "padding")
-    stride = get_random_numbers(layers_c, trial, 1, 3, "stride")
+    n_filters = get_random_numbers(layers_c, trial, 1, n_features-1, "n_filters", desc = True)
+    padding = get_random_numbers(layers_c, trial, 0, 2, "padding")
     #--------------#
-    layers_m = trial.suggest_int("layers_m", 1, 5, step=1)
+    layers_m = trial.suggest_int("layers_m", 1, 7, step=1)
     dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
-    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 512, 1024, "hidden_dim_m")
-    activation = trial.suggest_categorical("activation", ["tanh", "relu"])
-    timesteps, n_features = extract_timesteps(), extract_n_features()
-    print("------------STARTING TRAINING PART------------")
-    model = CNN1DClassification(n_features,timesteps, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, kernel_size, layers_m, hidden_dimension_size_m, dropout_m,  stride)
-    EPOCHS = 1
+    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m",step=64)
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
+
+
+    model = CNN1DClassification(n_features,timesteps, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding)
+
+    EPOCHS = 20
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")

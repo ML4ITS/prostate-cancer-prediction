@@ -15,7 +15,8 @@ from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
 
-from utils import save_evaluation_metric, plot_accuracy_loss
+from MLP import getMultiLayerPerceptron
+from utils import save_evaluation_metric, plot_accuracy_loss, dispatcher, get_random_numbers
 from dataset import *
 from IPython.display import display
 
@@ -24,10 +25,11 @@ from IPython.display import display
 class LSTMClassification(pl.LightningModule):
 
     def __init__(self, N_FEATURES, hidden_size, learning_rate,dropout,
-                              num_layers, rnn_type, bidirectional):
+                              num_layers, rnn_type, bidirectional, activation,layers_m,dropout_m,hidden_dimension_size_m):
         super(LSTMClassification, self).__init__()
         hidden_size = hidden_size
         num_layers = num_layers
+        activation = dispatcher[activation]
         dropout = dropout
         self.learning_rate = learning_rate
         self.criterion = nn.BCELoss()
@@ -54,7 +56,8 @@ class LSTMClassification(pl.LightningModule):
                 batch_first=True,
                 bidirectional = bidirectional)
 
-        self.linear = nn.Linear(hidden_size*2, 1) if bidirectional else nn.Linear(hidden_size, 1)
+        input_size = hidden_size*2 if bidirectional else hidden_size
+        self.linear = getMultiLayerPerceptron(input_size, layers_m, hidden_dimension_size_m, activation, dropout_m)
         self.test_F1score = F1Score()
         self.specificity = Specificity()
         self.target = []
@@ -147,8 +150,13 @@ def objective(trial: optuna.trial.Trial) -> float:
     dropout = trial.suggest_uniform("dropout", 0.1, 0.5)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
+    #MLP
+    layers_m = trial.suggest_int("layers_m", 1, 7, step=1)
+    dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
+    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m", step = 64)
     N_FEATURES = extract_n_features()
-    LSTMmodel = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional)
+    LSTMmodel = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m)
 
     dm = psaDataModule(batch_size=batch_size)
 
@@ -204,9 +212,14 @@ def training_test_LSTM():
     dropout = trial.suggest_uniform("dropout", 0.1, 0.5)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
+    #MLP
+    layers_m = trial.suggest_int("layers_m", 1, 7, step=1)
+    dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
+    hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m", step = 64)
     N_FEATURES = extract_n_features()
-    print("------------STARTING TRAINING PART------------")
-    model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional)
+
+    model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m)
     EPOCHS = 2
 
     dm = psaDataModule(batch_size = batch_size)

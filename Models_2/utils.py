@@ -3,14 +3,16 @@ import pandas as pd
 from IPython.display import display
 import seaborn as sn
 import matplotlib.pyplot as plt
+import torch.nn as nn
 
-def get_random_numbers(layers, trial, min, max, element, int = True, desc = True):
+dispatcher= {'nn.Tanh()':nn.Tanh(),'nn.ReLU()':nn.ReLU(), 'nn.ELU()':nn.ELU(), 'nn.LeakyReLU()':nn.LeakyReLU(), 'nn.Sigmoid()':nn.Sigmoid()}
+
+def get_random_numbers(layers, trial, min, max, element, int = True, desc = True, step = 1):
     random_float_list = []
     for i in range(layers+1):
         el = element + str(i)
-        #todo add step
         if int is True:
-            x = trial.suggest_int(el, min, max)
+            x = trial.suggest_int(el, min, max, step)
         else:
             x= trial.suggest_uniform(el, min, max)
         random_float_list.append(x)

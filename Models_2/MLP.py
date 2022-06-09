@@ -15,14 +15,15 @@ from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
 import matplotlib.pyplot as plt
-from utils import get_random_numbers, save_evaluation_metric, plot_accuracy_loss
+from utils import get_random_numbers, save_evaluation_metric, plot_accuracy_loss, dispatcher
 from dataset import *
 import random
 
 def getMultiLayerPerceptron(InputNetworkSize, layers,
                                    hidden_dimension_size, activationFunction, dropout):
     model = torch.nn.Sequential(
-        torch.nn.Linear(InputNetworkSize, hidden_dimension_size[0]),
+        torch.nn.LazyLinear(hidden_dimension_size[0]) if InputNetworkSize == None
+                    else torch.nn.Linear(InputNetworkSize, hidden_dimension_size[0]),
         activationFunction,
         nn.Dropout(dropout[0]),)
     for i in range(layers):
@@ -42,7 +43,7 @@ class MLPClassification(pl.LightningModule):
         super(MLPClassification, self).__init__()
         self.learning_rate = learning_rate
         self.criterion = nn.BCELoss()
-        self.activation = nn.ReLU() if activation == "relu" else nn.Tanh()
+        self.activation = dispatcher[activation]
         self.flatten = nn.Flatten()
         self.linear_act_stack = getMultiLayerPerceptron(n_features * timesteps, layers,
                                    hidden_dimension_size, self.activation, dropout)
@@ -133,10 +134,10 @@ class MLPClassification(pl.LightningModule):
 def objective(trial: optuna.trial.Trial) -> float:
     layers = trial.suggest_int("layers", 1, 15, step=1)
     dropout = get_random_numbers(layers, trial, 0.1, 0.9, "dropout", int = False, desc = False)
-    hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim")
+    hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim",step=64)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
-    activation = trial.suggest_categorical("activation", ["tanh", "relu"])
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
     timesteps, n_features = extract_timesteps(), extract_n_features()
 
     MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation)
@@ -190,10 +191,10 @@ def training_test_MLP():
     trial = study.best_trial
     layers = trial.suggest_int("layers", 1, 15, step=1)
     dropout = get_random_numbers(layers, trial, 0.1, 0.9, "dropout", int = False, desc = False)
-    hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim")
+    hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim",step=64)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
-    activation = trial.suggest_categorical("activation", ["tanh", "relu"])
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
     timesteps, n_features = extract_timesteps(), extract_n_features()
 
     MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation)
