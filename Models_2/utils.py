@@ -4,7 +4,7 @@ from IPython.display import display
 import seaborn as sn
 import matplotlib.pyplot as plt
 import torch.nn as nn
-
+import argparse
 dispatcher= {'nn.Tanh()':nn.Tanh(),'nn.ReLU()':nn.ReLU(), 'nn.ELU()':nn.ELU(), 'nn.LeakyReLU()':nn.LeakyReLU(), 'nn.Sigmoid()':nn.Sigmoid()}
 
 def get_random_numbers(layers, trial, min, max, element, int = True, desc = True, step = 1):
@@ -41,3 +41,13 @@ def plot_accuracy_loss(model,trainer):
     g = sn.relplot(data=metrics, kind = "line")
     plt.gcf().set_size_inches(12,4)
     plt.savefig(model+"/table.png")
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')

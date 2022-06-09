@@ -1,6 +1,7 @@
 from LSTM import training_test_LSTM
 from MLP import training_test_MLP
 from CNN1D import training_test_CNN1D
+from utils import str2bool
 from preprocessing import *
 import sys
 
@@ -8,11 +9,16 @@ import sys
 
 
 if __name__ == "__main__":
-    # _, path1, path2, dummies, delta, type = sys.argv
-    dummies = False
-    delta = False
-    type = "CNN1D"
-    data1, data2 = upload_db("db/cancer.csv", "db/nocancer.csv", len=4)
+    _, path1, path2, dummies, delta, type = sys.argv
+    dummies, delta = str2bool(dummies), str2bool(delta)
+    print(dummies)
+    print(delta)
+    print(type)
+
+    # dummies = False
+    # delta = False
+    # type = "CNN1D"
+    data1, data2 = upload_db(path1, path2, len=4)
     # data1, data2 = remove_outliers(data1), remove_outliers(data2)
 
     if dummies is True:
@@ -27,7 +33,7 @@ if __name__ == "__main__":
     data1, data2 = assign_target(data1, data2)
 
     data = concat_data(data1, data2)
-
+    print(data.head())
     data.to_csv("db/data.csv", index = False)
 
     #models
