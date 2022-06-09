@@ -18,8 +18,10 @@ def get_random_numbers(layers, trial, min, max, element, int = True, desc = True
         random_float_list.append(x)
     return np.sort(np.array(random_float_list))[::-1] if desc else np.sort(np.array(random_float_list))
 
-def save_evaluation_metric(model, accuracy, f1score, precision, recall, specificity):
+def get_kernel_size(input_size, output_size,padding):
+    return 2 * padding + input_size + 1 - output_size
 
+def save_evaluation_metric(model, accuracy, f1score, precision, recall, specificity):
     with  open(model+"/results.txt", "w") as file:
         accuracy = "accuracy: " + str(accuracy.item()) + "\n"
         f1score = "f1score: " + str(f1score.item()) + "\n"
