@@ -65,7 +65,13 @@ Command Line Arguments:
     python main.py db/cancer.csv db/nocancer.csv True True MLP
 ```
 ***
-
+##FOURTH STEP: Results to download
+The folders *cnn1d*, *lstm*, *mlp* contain the following outputs:
+1. the confusion matrix (conf_mat.png)
+2. the ROC curve (roc_curve.png)
+3. the model 
+4. the metrics (results.txt)
+5. a table with accuracy/loss curve
 ###TYPE OF PROBLEM
 
 1. Binary classification problem (label 0: no cancer, label 1: cancer)
@@ -107,4 +113,5 @@ Command Line Arguments:
 *CNN1D*
 
 *MLP*
+
 
