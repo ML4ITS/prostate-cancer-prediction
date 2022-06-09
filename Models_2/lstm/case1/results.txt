@@ -1,0 +1,14 @@
+accuracy: 0.5333333611488342
+f1score: 0.6956522464752197
+precision: 0.5333333611488342
+recall: 1.0
+specificity: 0.0
+.... next ....
+accuracy: 0.46666666865348816
+f1score: 0.6363636255264282
+precision: 0.46666666865348816
+recall: 1.0
+specificity: 0.0
+.... next ....
+mean accuracy: 0.5000000149011612
+std accuracy: 0.033333346247673035

@@ -39,7 +39,7 @@ def getMultiLayerPerceptron(InputNetworkSize, layers,
 
 class MLPClassification(pl.LightningModule):
 
-    def __init__(self, n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation):
+    def __init__(self, n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation, case = None):
         super(MLPClassification, self).__init__()
         self.learning_rate = learning_rate
         self.criterion = nn.BCELoss()
@@ -53,6 +53,7 @@ class MLPClassification(pl.LightningModule):
         self.target = []
         self.preds = []
         self.prob = []
+        self.case = case
 
     def forward(self, x):
         x = self.flatten(x)
@@ -116,19 +117,19 @@ class MLPClassification(pl.LightningModule):
 
 
     def test_epoch_end(self, outputs):
-        save_evaluation_metric("mlp", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute())
+        save_evaluation_metric("mlp", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute(), self.case)
         #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
-        disp.figure_.savefig('mlp/conf_mat.png',dpi=300)
+        disp.figure_.savefig("mlp/" + self.case + "/conf_mat.png",dpi=300)
         plt.clf()
         #create ROC curve
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
         plt.plot(fpr, tpr)
         plt.ylabel("true positive rate")
         plt.xlabel("false positive rate")
-        plt.savefig("mlp/roc_curve.png")
+        plt.savefig("mlp/" + self.case + "/roc_curve.png")
 
 
 
@@ -187,7 +188,7 @@ def hyperparameter_tuning(trials):
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_MLP(epochs, trials):
+def training_test_MLP(epochs, trials, case):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     layers = trial.suggest_int("layers", 1, 15, step=1)
@@ -198,7 +199,7 @@ def training_test_MLP(epochs, trials):
     activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
     timesteps, n_features = extract_timesteps(), extract_n_features()
 
-    MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation)
+    MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation, case)
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -226,10 +227,13 @@ def training_test_MLP(epochs, trials):
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )
     trainer.fit(MLPmodel, datamodule = dm)
-    torch.save(MLPmodel, "mlp/model")
-    model = torch.load( "mlp/model")
-    trainer.test(model, datamodule=dm)
-    plot_accuracy_loss("mlp",trainer)
+    torch.save(MLPmodel, "mlp/" + case + "/model")
+    model = torch.load( "mlp/" + case + "/model")
+    print("------------STARTING TEST PART------------")
+    results = trainer.test(model, datamodule=dm)
+    print("------------FINISH TEST PART------------")
+    plot_accuracy_loss("mlp", trainer, case)
+    return results
 
 
 

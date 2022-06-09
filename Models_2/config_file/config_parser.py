@@ -9,5 +9,6 @@ class Data:
                 self.trials = p["trials"]
                 self.epochs = p["epochs"]
                 self.balanced = p["balanced"]
+                self.repetition = p["repetition"]
             except yaml.YAMLError as exc:
                 print(exc)

@@ -46,7 +46,7 @@ def getConv1d(n_features, layers, hidden_dimension_size, activationFunction, dro
 
 class CNN1DClassification(pl.LightningModule):
 
-    def __init__(self, n_features, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding):
+    def __init__(self, n_features, learning_rate, layers_c, hidden_dimension_size_c, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding, case = None):
         super(CNN1DClassification, self).__init__()
         self.learning_rate = learning_rate
         self.criterion = nn.BCEWithLogitsLoss()
@@ -56,6 +56,7 @@ class CNN1DClassification(pl.LightningModule):
         self.target = []
         self.preds = []
         self.prob = []
+        self.case = case
 
         self.cnn1d = getConv1d(n_features, layers_c, hidden_dimension_size_c, self.activation, dropout_c, padding)
 
@@ -95,6 +96,7 @@ class CNN1DClassification(pl.LightningModule):
         preds = self.forward(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
+        preds = torch.sigmoid(preds)
         acc = accuracy(preds, y)
         logs = {"valid_loss" : loss, "valid_acc" : acc}
         self.log_dict(logs, on_step=False, on_epoch=True, prog_bar=True, logger = True)
@@ -109,6 +111,7 @@ class CNN1DClassification(pl.LightningModule):
         preds = self.forward(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
+        preds = torch.sigmoid(preds)
         self.prob.extend(preds.numpy())
         preds = (preds>0.5).float()
         self.target.extend(y.numpy())
@@ -127,19 +130,19 @@ class CNN1DClassification(pl.LightningModule):
 
 
     def test_epoch_end(self, outputs):
-        save_evaluation_metric("cnn1d", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute())
+        save_evaluation_metric("cnn1d", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute(), self.case)
         #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
-        disp.figure_.savefig('cnn1d/conf_mat.png',dpi=300)
+        disp.figure_.savefig("cnn1d/" + self.case + "/conf_mat.png",dpi=300)
         #create ROC curve
         plt.clf()
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
         plt.plot(fpr, tpr)
         plt.ylabel("true positive rate")
         plt.xlabel("false positive rate")
-        plt.savefig("cnn1d/roc_curve.png")
+        plt.savefig("cnn1d/" + self.case + "/roc_curve.png")
 
 def objective(trial: optuna.trial.Trial) -> float:
     n_features = extract_n_features()
@@ -202,7 +205,7 @@ def hyperparameter_tuning(trials):
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_CNN1D(epochs, trials):
+def training_test_CNN1D(epochs, trials, case):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     n_features = extract_n_features()
@@ -219,7 +222,7 @@ def training_test_CNN1D(epochs, trials):
     activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
 
 
-    model = CNN1DClassification(n_features, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding)
+    model = CNN1DClassification(n_features, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding, case)
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -247,12 +250,13 @@ def training_test_CNN1D(epochs, trials):
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )
     trainer.fit(model, datamodule = dm)
-    torch.save(model, "cnn1d/model")
-    cnn1d_model = torch.load("cnn1d/model")
+    torch.save(model, "cnn1d/" + case + "/model")
+    cnn1d_model = torch.load("cnn1d/" + case + "/model")
     print("------------STARTING TEST PART------------")
-    trainer.test(cnn1d_model, datamodule=dm)
-    plot_accuracy_loss("cnn1d", trainer)
+    results = trainer.test(cnn1d_model, datamodule=dm)
+    plot_accuracy_loss("cnn1d", trainer, case)
     print("------------FINISH TEST PART------------")
+    return results
 
 
 

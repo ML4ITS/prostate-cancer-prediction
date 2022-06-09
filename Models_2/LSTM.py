@@ -14,7 +14,6 @@ from torch.nn import functional as F
 from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
-
 from MLP import getMultiLayerPerceptron
 from utils import save_evaluation_metric, plot_accuracy_loss, dispatcher, get_random_numbers
 from dataset import *
@@ -25,15 +24,15 @@ from IPython.display import display
 class LSTMClassification(pl.LightningModule):
 
     def __init__(self, N_FEATURES, hidden_size, learning_rate,dropout,
-                              num_layers, rnn_type, bidirectional, activation,layers_m,dropout_m,hidden_dimension_size_m):
+                              num_layers, rnn_type, bidirectional, activation,layers_m,dropout_m,hidden_dimension_size_m, case = None):
         super(LSTMClassification, self).__init__()
         hidden_size = hidden_size
         num_layers = num_layers
         activation = dispatcher[activation]
         dropout = dropout
         self.learning_rate = learning_rate
-        self.criterion = nn.BCELoss()
-
+        self.criterion = nn.BCEWithLogitsLoss()
+        self.case = case
         if rnn_type == 'lstm':
             self.rnn = nn.LSTM(input_size= N_FEATURES,
                                 hidden_size=hidden_size,
@@ -67,7 +66,7 @@ class LSTMClassification(pl.LightningModule):
     def forward(self, x):
         x, _= self.rnn(x)
         x = self.linear(x[:,-1])
-        return torch.sigmoid(x)
+        return x
 
     def configure_optimizers(self):
             return torch.optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=1e-5)
@@ -81,6 +80,7 @@ class LSTMClassification(pl.LightningModule):
         preds = self.forward(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
+        preds = torch.sigmoid(preds)
         acc = accuracy(preds, y)
         logs = {"train_loss" : loss, "train_acc" : acc}
         self.log_dict(logs, on_step=False, on_epoch=True, prog_bar=True, logger = True)
@@ -94,6 +94,7 @@ class LSTMClassification(pl.LightningModule):
         preds = self.forward(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
+        preds = torch.sigmoid(preds)
         acc = accuracy(preds, y)
         logs = {"valid_loss" : loss, "valid_acc" : acc}
         self.log_dict(logs, on_step=False, on_epoch=True, prog_bar=True, logger = True)
@@ -108,6 +109,7 @@ class LSTMClassification(pl.LightningModule):
         preds = self.forward(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
+        preds = torch.sigmoid(preds)
         self.prob.extend(preds.numpy())
         preds = (preds>0.5).float()
         self.target.extend(y.numpy())
@@ -126,19 +128,20 @@ class LSTMClassification(pl.LightningModule):
 
 
     def test_epoch_end(self, outputs):
-        save_evaluation_metric("lstm", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute())
+        save_evaluation_metric("lstm", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute(), self.case)
         # #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
-        disp.figure_.savefig('lstm/conf_mat.png',dpi=300)
+        disp.figure_.savefig("lstm/" + self.case +"/conf_mat.png",dpi=300)
         plt.clf()
         #create ROC curve
         fpr, tpr, _ = metrics.roc_curve(np.array(self.target), np.array(self.prob))
         plt.plot(fpr, tpr)
         plt.ylabel("true positive rate")
         plt.xlabel("false positive rate")
-        plt.savefig("lstm/roc_curve.png")
+        plt.savefig("lstm/" + self.case +"/roc_curve.png")
+
 
 
 
@@ -202,7 +205,7 @@ def hyperparameter_tuning(trials):
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_LSTM(epochs, trials):
+def training_test_LSTM(epochs, trials, case):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
@@ -212,14 +215,14 @@ def training_test_LSTM(epochs, trials):
     dropout = trial.suggest_uniform("dropout", 0.1, 0.5)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
-    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()", "nn.Sigmoid()"])
     #MLP
     layers_m = trial.suggest_int("layers_m", 1, 7, step=1)
     dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
     hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m", step = 64)
     N_FEATURES = extract_n_features()
 
-    model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m)
+    model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m, case)
 
     dm = psaDataModule(batch_size = batch_size)
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -247,12 +250,13 @@ def training_test_LSTM(epochs, trials):
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                         )
     trainer.fit(model, datamodule = dm)
-    torch.save(model, "lstm/model")
-    lstm_model = torch.load( "lstm/model")
+    torch.save(model, "lstm/" + case + "/model")
+    lstm_model = torch.load( "lstm/" + case + "/model")
     print("------------STARTING TEST PART------------")
-    trainer.test(lstm_model, datamodule=dm)
-    plot_accuracy_loss("lstm", trainer)
+    results = trainer.test(lstm_model, datamodule=dm)
+    plot_accuracy_loss("lstm", trainer, case)
     print("------------FINISH TEST PART------------")
+    return results
 
 
 
