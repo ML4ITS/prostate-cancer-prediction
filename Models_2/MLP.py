@@ -165,7 +165,7 @@ def objective(trial: optuna.trial.Trial) -> float:
 
 def hyperparameter_tuning(trials):
 
-    study = optuna.create_study(direction="minimize", pruner=optuna.pruners.MedianPruner())
+    study = optuna.create_study(direction="minimize", pruner=optuna.pruners.MedianPruner(), sampler=optuna.samplers.TPESampler())
     study.optimize(objective, n_trials= trials)
 
     pruned_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.PRUNED]
