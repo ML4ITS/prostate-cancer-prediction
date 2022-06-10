@@ -150,7 +150,7 @@ def objective(trial: optuna.trial.Trial) -> float:
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
     layers_c = trial.suggest_int("layers", 1, 15, step=1)
     activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
-    dropout_c = get_random_numbers(layers_c, trial, 0.1, 0.9, "dropout_c", int = False, desc = False)
+    dropout_c = get_random_numbers(layers_c, trial, 0.0, 0.9, "dropout_c", int = False, desc = False)
     n_filters = get_random_numbers(layers_c, trial, 1, n_features-1, "n_filters", desc = True)
     padding = get_random_numbers(layers_c, trial, 0, 2, "padding")
     # parameters for linear layers
@@ -212,14 +212,14 @@ def training_test_CNN1D(epochs, trials, case):
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
     layers_c = trial.suggest_int("layers", 1, 15, step=1)
-    dropout_c = get_random_numbers(layers_c, trial, 0.1, 0.9, "dropout_c", int = False, desc = False)
+    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
+    dropout_c = get_random_numbers(layers_c, trial, 0.0, 0.9, "dropout_c", int = False, desc = False)
     n_filters = get_random_numbers(layers_c, trial, 1, n_features-1, "n_filters", desc = True)
     padding = get_random_numbers(layers_c, trial, 0, 2, "padding")
-    #--------------#
+    # parameters for linear layers
     layers_m = trial.suggest_int("layers_m", 1, 7, step=1)
     dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
     hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m",step=64)
-    activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
 
 
     model = CNN1DClassification(n_features, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding, case)

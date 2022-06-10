@@ -135,7 +135,7 @@ class MLPClassification(pl.LightningModule):
 
 def objective(trial: optuna.trial.Trial) -> float:
     layers = trial.suggest_int("layers", 1, 15, step=1)
-    dropout = get_random_numbers(layers, trial, 0.1, 0.9, "dropout", int = False, desc = False)
+    dropout = get_random_numbers(layers, trial, 0.0, 0.9, "dropout", int = False, desc = False)
     hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim",step=64)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
@@ -192,7 +192,7 @@ def training_test_MLP(epochs, trials, case):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     layers = trial.suggest_int("layers", 1, 15, step=1)
-    dropout = get_random_numbers(layers, trial, 0.1, 0.9, "dropout", int = False, desc = False)
+    dropout = get_random_numbers(layers, trial, 0.0, 0.9, "dropout", int = False, desc = False)
     hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim",step=64)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)

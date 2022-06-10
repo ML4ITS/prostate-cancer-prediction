@@ -45,9 +45,6 @@ def get_std_mean_accuracy(model, accuracy, case):
     file.seek(0)
     mean = "mean accuracy: " + str(np.mean(accuracy)) + "\n"
     std = "std accuracy: " + str(np.std(accuracy)) + "\n"
-    plt.clf()
-    plt.boxplot(accuracy)
-    plt.savefig(model + "/" + case + "/boxplot.png")
     content = mean + std
     file.write(content)
     file.close()
@@ -72,5 +69,11 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-
+def multiple_boxplot(accuracy, case):
+    # Pandas dataframe
+    data = pd.DataFrame({"CNN1D": accuracy[0], "MLP": accuracy[1], "LSTM": accuracy[1] })
+    # Plot the dataframe
+    ax = data[['CNN1D', 'MLP', 'LSTM']].plot(kind='box', title='boxplot')
+    # Display the plot
+    plt.savefig("boxplot/" + case + "/table.png")
 

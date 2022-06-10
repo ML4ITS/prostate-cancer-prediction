@@ -43,35 +43,31 @@ The datasets should be saved in *Models2/db* with the names *cancer.csv* and  *n
 Command Line Arguments:
 1. PATH1: path of the dataset for patients WITH cancer 
 2. PATH2: path of the dataset for patients WITHOUT cancer
-3. DUMMIES: True / False
-4. DELTA_FEATURES: True / False
-5. TYPE: lstm / cnn1d / mlp
+3. TYPE OF INPUT: 0 /  1 / 2 / 3
+***
+    0: no dummies no delta
+    1: no dummies yes delta
+    2: yes dummies no delta
+    3: yes dummies yes delta
+***
  
 ***Scripts to be run***:
 ```bash
-    python main.py db/cancer.csv db/nocancer.csv True False lstm
-    python main.py db/cancer.csv db/nocancer.csv False True lstm
-    python main.py db/cancer.csv db/nocancer.csv False False lstm
-    python main.py db/cancer.csv db/nocancer.csv True True lstm
-    
-    python main.py db/cancer.csv db/nocancer.csv True False cnn1d
-    python main.py db/cancer.csv db/nocancer.csv False True cnn1d
-    python main.py db/cancer.csv db/nocancer.csv False False cnn1d
-    python main.py db/cancer.csv db/nocancer.csv True True cnn1d
-    
-    python main.py db/cancer.csv db/nocancer.csv True False mlp
-    python main.py db/cancer.csv db/nocancer.csv False True mlp
-    python main.py db/cancer.csv db/nocancer.csv False False mlp
-    python main.py db/cancer.csv db/nocancer.csv True True mlp
+    python main.py db/cancer.csv db/nocancer.csv 0
+    python main.py db/cancer.csv db/nocancer.csv 1
+    python main.py db/cancer.csv db/nocancer.csv 2
+    python main.py db/cancer.csv db/nocancer.csv 3
 ```
 ***
 ##FOURTH STEP: Results to download
-The folders *cnn1d*, *lstm*, *mlp* contain the following outputs:
+The folders *cnn1d*, *lstm*, *mlp* contain 4 sub-folders (one for each type of input).In the single folder there are the following outputs:
 1. the confusion matrix (conf_mat.png)
 2. the ROC curve (roc_curve.png)
 3. the model 
 4. the metrics (results.txt)
 5. a table with accuracy/loss curve
+
+In the folder *boxplot* there are the bloxplots for each type of input.
 ###TYPE OF PROBLEM
 
 1. Binary classification problem (label 0: no cancer, label 1: cancer)
