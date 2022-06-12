@@ -68,6 +68,7 @@ The folders *cnn1d*, *lstm*, *mlp* contain 4 sub-folders (one for each type of i
 5. a table with accuracy/loss curve
 
 In the folder *boxplot* there are the bloxplots for each type of input.
+
 ###TYPE OF PROBLEM
 
 1. Binary classification problem (label 0: no cancer, label 1: cancer)

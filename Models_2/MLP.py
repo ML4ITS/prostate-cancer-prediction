@@ -157,6 +157,8 @@ def objective(trial: optuna.trial.Trial) -> float:
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
+                         accelerator="auto",
+                         devices=1 if torch.cuda.is_available() else None,
                          callbacks=[early_stop_callback])
 
     trainer.fit(MLPmodel, datamodule=dm)
@@ -217,7 +219,7 @@ def training_test_MLP(epochs, trials, case):
        verbose=False,
        mode='min'
     )
-    logger = CSVLogger(save_dir="/logs/")
+    logger = CSVLogger(save_dir="logs/")
 
     trainer = pl.Trainer(
                         accelerator="auto",

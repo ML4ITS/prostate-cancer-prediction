@@ -1,3 +1,8 @@
+from datetime import time
+
+import torch
+from caffe2.contrib import gloo
+
 from LSTM import training_test_LSTM
 from MLP import training_test_MLP
 from CNN1D import training_test_CNN1D
@@ -5,11 +10,14 @@ from config_file.config_parser import Data
 from utils import str2bool, get_std_mean_accuracy, flush_file, multiple_boxplot
 from preprocessing import *
 import sys
+import time
+import torch.nn as nn
 
 
 
 
 if __name__ == "__main__":
+    start = time.time()
     #parameters from command line
     _, path1, path2, i = sys.argv
     # dummies, delta = str2bool(dummies), str2bool(delta)
@@ -41,6 +49,8 @@ if __name__ == "__main__":
     data.to_csv("db/data.csv", index = False)
 
 #models
+    torch.set_num_threads(5)
+    torch.set_num_interop_threads(5)
     accuracy = []
     case = "case" + str(i+1)
     #CNN1D
@@ -69,6 +79,7 @@ if __name__ == "__main__":
     get_std_mean_accuracy("lstm", acc, case)
     #box plot for the 3 models
     multiple_boxplot(accuracy, case)
+    print("Time taken: ", time.time() - start)
 
 
 

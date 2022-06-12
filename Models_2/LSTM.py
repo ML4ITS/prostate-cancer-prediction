@@ -175,6 +175,8 @@ def objective(trial: optuna.trial.Trial) -> float:
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
+                         accelerator="auto",
+                         devices=1 if torch.cuda.is_available() else None,
                          callbacks=[early_stop_callback])
 
     trainer.fit(LSTMmodel, datamodule=dm)
@@ -244,7 +246,7 @@ def training_test_LSTM(epochs, trials, case):
 
     trainer = pl.Trainer(
                         accelerator="auto",
-                        devices = 1 if torch.cuda.is_available() else None,
+                        devices=1 if torch.cuda.is_available() else None,
                         max_epochs=epochs,
                         logger=logger,
                         callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
