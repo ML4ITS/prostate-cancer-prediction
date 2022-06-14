@@ -1,20 +1,16 @@
-from datetime import time
-
-import torch
-from caffe2.contrib import gloo
-
-from LSTM import training_test_LSTM
-from MLP import training_test_MLP
-from CNN1D import training_test_CNN1D
-from config_file.config_parser import Data
-from utils import str2bool, get_std_mean_accuracy, flush_file, multiple_boxplot
-from preprocessing import *
 import sys
+sys.path.append('../')
+import torch
+from config_file.config_parser import Data
+from manage_dataset import *
+from methods.CNN1D import training_test_CNN1D
+from methods.LSTM import training_test_LSTM
+from methods.MLP import training_test_MLP
+from utils import get_std_mean_accuracy, flush_file, multiple_boxplot
+from preprocessing import *
+
+
 import time
-import torch.nn as nn
-
-
-
 
 if __name__ == "__main__":
     start = time.time()
@@ -24,8 +20,9 @@ if __name__ == "__main__":
     i = int(i)
     p = Data() #get parameters
     p.extractData()
-
-    data1, data2 = upload_db(path1, path2, len=4)
+    if p.regularization or p.indicator or p.interpolation:
+        exit("wrong parameters")
+    data1, data2 = upload_db(path1, path2, "days", len=4, model2 = True)
     # data1, data2 = remove_outliers(data1), remove_outliers(data2)
 
     #case 0: no dummies no delta
@@ -46,7 +43,7 @@ if __name__ == "__main__":
 
     data = concat_data(data1, data2)
 
-    data.to_csv("db/data.csv", index = False)
+    data.to_csv("../data_model.csv", index = False)
 
 #models
     torch.set_num_threads(5)

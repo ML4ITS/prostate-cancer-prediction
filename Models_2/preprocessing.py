@@ -1,29 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def upload_db_new(path1, path2, len = 4):
-    """read the two dbs and select patients with a minimum number of values"""
-    data1 = pd.read_csv(path1).sort_values(by = ["age"])
-    data2 = pd.read_csv(path2).sort_values(by=["age"])
-    v = data1.ss_number_id.value_counts()
-    data1 = data1[data1.ss_number_id.isin(v.index[v.gt(len)])]
-    v = data2.ss_number_id.value_counts()
-    data2 = data2[data2.ss_number_id.isin(v.index[v.gt(len)])]
-    print("Number of patients with cancer: "+ str(data1["ss_number_id"].nunique()))
-    print("Number of patients without cancer: "+ str(data2["ss_number_id"].nunique()))
-    return data1, data2
 
-def upload_db(path1, path2, len = 4):
-    """read the two dbs and select patients with a minimum number of values"""
-    data1 = pd.read_csv(path1).sort_values(by = ["age"])
-    data2 = pd.read_csv(path2).sort_values(by=["age"])
-    v = data1.ss_number_id.value_counts()
-    data1 = data1[data1.ss_number_id.isin(v.index[v.gt(len)])]
-    v = data2.ss_number_id.value_counts()
-    data2 = data2[data2.ss_number_id.isin(v.index[v.gt(len)])]
-    print("Number of patients with cancer: "+ str(data1["ss_number_id"].nunique()))
-    print("Number of patients without cancer: "+ str(data2["ss_number_id"].nunique()))
-    return data1, data2
 
 def get_dummies_data(data):
     """dummies for features age and psa"""
@@ -47,19 +25,6 @@ def delete_columns(data):
     del data["age"]
     del data["psa"]
     return data
-
-def balance_db(data1, data2, balanced):
-    if balanced is not True:
-        return data2
-    n = data2["ss_number_id"].unique()
-    id = np.random.choice(n, size = len(data1["ss_number_id"].unique()), replace = False)
-    data2 = data2.loc[data2["ss_number_id"].isin((id))]
-    return data2
-
-def assign_target(data1, data2):
-    data1["risk"] = 1 #cancer
-    data2["risk"] = 0 #no cancer
-    return data1, data2
 
 def remove_outliers(data):
     """remove patients with age>=100"""

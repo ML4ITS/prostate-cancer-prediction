@@ -4,7 +4,9 @@
 ***PATIENTS WITH CANCER***:
 ***
     SELECT psaresults.ss_number_id, (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) as age,
-    (extract( year from ambiguous_date) * 12 + extract( month from ambiguous_date)) as months,
+    (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) * 12 * 30 +
+    (extract ( month from ambiguous_date) - extract ( month from ss_numbers.date_of_birth_15)) * 30 +
+    (extract ( day from ambiguous_date) - extract ( day from ss_numbers.date_of_birth_15)) as days,
     date_of_birth_15, result_numeric as psa
     
     FROM ss_numbers, psaresults, kreftreg_data
@@ -18,7 +20,9 @@
 ***PATIENTS WITHOUT CANCER***:
 ***
     SELECT psaresults.ss_number_id, (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) as age,
-    (extract( year from ambiguous_date) * 12 + extract( month from ambiguous_date)) as months,
+    (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) * 12 * 30 +
+    (extract ( month from ambiguous_date) - extract ( month from ss_numbers.date_of_birth_15)) * 30 +
+    (extract ( day from ambiguous_date) - extract ( day from ss_numbers.date_of_birth_15)) as days,
     date_of_birth_15, result_numeric as psa
     
     FROM (
@@ -53,10 +57,10 @@ Command Line Arguments:
  
 ***Scripts to be run***:
 ```bash
-    python main.py db/cancer.csv db/nocancer.csv 0
-    python main.py db/cancer.csv db/nocancer.csv 1
-    python main.py db/cancer.csv db/nocancer.csv 2
-    python main.py db/cancer.csv db/nocancer.csv 3
+    python main.py dataset/cancer.csv dataset/nocancer.csv 0
+    python main.py dataset/cancer.csv dataset/nocancer.csv 1
+    python main.py dataset/cancer.csv dataset/nocancer.csv 2
+    python main.py dataset/cancer.csv dataset/nocancer.csv 3
 ```
 ***
 ##FOURTH STEP: Results to download
