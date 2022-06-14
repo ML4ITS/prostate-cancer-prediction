@@ -162,7 +162,7 @@ def objective(trial: optuna.trial.Trial) -> float:
     N_FEATURES = extract_n_features()
     print("number of features " + str(N_FEATURES))
     LSTMmodel = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m)
-########## come faccio a passare qua indicator?????
+
     dm = psaDataModule(batch_size=batch_size)
 
     early_stop_callback = EarlyStopping(

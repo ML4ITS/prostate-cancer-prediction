@@ -38,7 +38,7 @@ def prepare_df_wrapp(data1, data2):
         data.sort_values(by = ["date"], inplace = True)
         data.set_index("date", inplace = True)
         del data["days"]
-        del data["age"]
+        # del data["age"]
         del data["ambiguous_date"]
         del data["date_of_birth_15"]
         return data
@@ -67,8 +67,6 @@ def concat_data(data1, data2):
     data = pd.concat([data1, data2])
     data["ss_number_id"] = data.index
     print("Number of patients: " + str(data["ss_number_id"].nunique()))
-    print("Number of patients: " + str(data["ss_number_id"].count()))
-    print("data shape: " + str(data.shape[0]))
     del data["ss_number_id"]
     # column_to_move = data.pop("ss_number_id")
     # data.insert(0, "ss_number_id", column_to_move)

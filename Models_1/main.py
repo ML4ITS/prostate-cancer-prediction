@@ -17,15 +17,14 @@ if __name__ == "__main__":
     p.extractData()
     if p.regularization is False:
         exit("wrong parameters")
-#capire come gestire days
     data1, data2 = upload_db("../dataset/cancer.csv", "../dataset/nocancer.csv", "days", len=4)
+    data2 = balance_db(data1, data2, p.balanced)
     data1, data2 = change_format(data1, data2)
     min, max = define_global_min_max(data1, data2)
     data1, data2 = set_min_max(data1, data2, min, max)
     data1, data2 = prepare_df_wrapp(data1, data2)
-    data1, data2 = interpolation_data(data1, data2, p.interpolation, frequency = "48h")
+    data1, data2 = interpolation_data(data1, data2, p.interpolation, frequency = "6M")
     data1, data2 = assign_target(data1, data2)
-    data2 = balance_db(data1, data2, p.balanced)
     data =concat_data(data1, data2)
     data.to_csv("../data_model.csv", index=False, header = False)
     #type LSTM
