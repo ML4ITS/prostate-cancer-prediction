@@ -15,7 +15,7 @@ Before remember to change directory *cd Model_1* and then launch the scripts
 ```
 ***
 ## FOURTH STEP: Results to download
-* The folders *lstm* contain 4 sub-folders (one for each type of input).In the single folder there are the following outputs:
+* The folders *lstm* contain 4 sub-folders (one for each type of input). In the single folder there are the following outputs:
   1. the confusion matrix (conf_mat.png)
   2. the ROC curve (roc_curve.png)
   3. the model 
@@ -51,6 +51,7 @@ INPUT 3: resampling, interpolation
 
 INPUT 4: resampling, interpolation, binary indicator
 
+### FEATURES
 *PSA*: real value of the PSA
 
 *BINARY VALUE*: 0 means real value while 1 means missing value
