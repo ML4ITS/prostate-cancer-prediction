@@ -112,7 +112,7 @@ class psaDataset(Dataset):
         x = torch.FloatTensor(x) if self.regularization else torch.FloatTensor(x[0])
         if self.indicator is True:
             x = get_binary_indicators(x)
-        if self.indicator is False and self.regularization:
+        if self.indicator is False and self.regularization is True:
             x = x.reshape(-1,1)
         y = self.y[index+self.seq_len-1]
         return x, y, x.shape[0]

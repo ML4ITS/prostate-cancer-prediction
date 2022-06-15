@@ -26,10 +26,6 @@ def delete_columns(data):
     del data["psa"]
     return data
 
-def remove_outliers(data):
-    """remove patients with age>=100"""
-    return data.loc[data['age'] < 100]
-
 def concat_data(data1, data2):
     """union of the two dbs"""
     data = pd.concat([data1, data2])
