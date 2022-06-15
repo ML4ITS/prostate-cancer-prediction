@@ -1,5 +1,5 @@
-#IRREGULAR TIME SERIES
-##THIRD STEP: Running the code using the Command-Line
+# IRREGULAR TIME SERIES
+## THIRD STEP: Running the code using the Command-Line
 Command Line Arguments:
 1. PATH1: path of the dataset for patients WITH cancer 
 2. PATH2: path of the dataset for patients WITHOUT cancer
@@ -21,7 +21,7 @@ Before remember to change directory *cd Model_2* and then launch the scripts
     python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
 ```
 ***
-##FOURTH STEP: Results to download
+## FOURTH STEP: Results to download
 The folders *cnn1d*, *lstm*, *mlp* contain 4 sub-folders (one for each type of input).In the single folder there are the following outputs:
 1. the confusion matrix (conf_mat.png)
 2. the ROC curve (roc_curve.png)
@@ -31,7 +31,7 @@ The folders *cnn1d*, *lstm*, *mlp* contain 4 sub-folders (one for each type of i
 
 In the folder *boxplot* there are the bloxplots for each type of input.
 
-###TYPE OF PROBLEM
+### TYPE OF PROBLEM
 
 1. Binary classification problem (label 0: no cancer, label 1: cancer)
 
@@ -50,7 +50,7 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 6. 50 <= age < 100
 
 
-###DIFFERENT TYPES OF INPUT
+### DIFFERENT TYPES OF INPUT
 
 |age              | psa              | -             | -              |
 |-----------------|------------------|---------------|----------------|
@@ -67,7 +67,7 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 *DELTA_TIME*: different between time t and time t-1 (in months)
 
 
-###DIFFERENT MODELS
+### DIFFERENT MODELS
 
 *LSTM* 
 

@@ -3,7 +3,7 @@ MODELS 1: Time series with interpolation and discretization
 
 MODELS 2: Irregular time series
 
-##FIRST STEP: Building database
+## FIRST STEP: Building database
 
 
 ***PATIENTS WITH CANCER***:
@@ -44,6 +44,6 @@ MODELS 2: Irregular time series
     WHERE tab.id =  psaresults.ss_number_id and 
         ss_numbers.ss_number_id = psaresults.ss_number_id and (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) >= 50
 ***
-##SECOND STEP: Save the dataset
+## SECOND STEP: Save the dataset
 
 The datasets should be saved in the folder *dataset* with the names *cancer.csv* and  *nocancer.csv*
