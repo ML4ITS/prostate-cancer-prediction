@@ -38,11 +38,12 @@ def prepare_df_wrapp(data1, data2):
         data.sort_values(by = ["date"], inplace = True)
         data.set_index("date", inplace = True)
         del data["days"]
-        # del data["age"]
+        del data["age"]
         del data["ambiguous_date"]
         del data["date_of_birth_15"]
         return data
     data1 = prepare_df(data1)
+    print(data1.columns)
     data2 = prepare_df(data2)
     return data1, data2
 

@@ -23,8 +23,8 @@ if __name__ == "__main__":
     for i in range(4):
         p.interpolation, p.indicator = combinations(i)
         data1, data2 = upload_db("../dataset/cancer.csv", "../dataset/nocancer.csv", "days", len=4)
-        data2 = balance_db(data1, data2, m.balanced)
         # data1, data2 = remove_outliers(data1, p.regularization), remove_outliers(data2, p.regularization)
+        data2 = balance_db(data1, data2, m.balanced)
         data1, data2 = change_format(data1, data2)
         min, max = define_global_min_max(data1, data2)
         data1, data2 = set_min_max(data1, data2, min, max)

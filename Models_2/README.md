@@ -1,48 +1,4 @@
-##FIRST STEP: Building database
-
-
-***PATIENTS WITH CANCER***:
-***
-    SELECT psaresults.ss_number_id, (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) as age,
-    (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) * 12 * 30 +
-    (extract ( month from ambiguous_date) - extract ( month from ss_numbers.date_of_birth_15)) * 30 +
-    (extract ( day from ambiguous_date) - extract ( day from ss_numbers.date_of_birth_15)) as days,
-    date_of_birth_15, result_numeric as psa
-    
-    FROM ss_numbers, psaresults, kreftreg_data
-    
-    WHERE diagnosis_date >= ambiguous_date and psaresults.ss_number_id = kreftreg_data.ss_number_id and
-        ss_numbers.ss_number_id = psaresults.ss_number_id and (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) >= 50
-***
-
-
-
-***PATIENTS WITHOUT CANCER***:
-***
-    SELECT psaresults.ss_number_id, (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) as age,
-    (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) * 12 * 30 +
-    (extract ( month from ambiguous_date) - extract ( month from ss_numbers.date_of_birth_15)) * 30 +
-    (extract ( day from ambiguous_date) - extract ( day from ss_numbers.date_of_birth_15)) as days,
-    date_of_birth_15, result_numeric as psa
-    
-    FROM (
-    SELECT distinct(psaresults.ss_number_id) as id
-
-        FROM psaresults
-        
-        LEFT JOIN kreftreg_data
-        
-        ON psaresults.ss_number_id = kreftreg_data.ss_number_id
-        
-        WHERE kreftreg_data.ss_number_id is NULL) as tab, ss_numbers, psaresults
-
-    WHERE tab.id =  psaresults.ss_number_id and 
-        ss_numbers.ss_number_id = psaresults.ss_number_id and (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) >= 50
-***
-##SECOND STEP: Save the dataset
-
-The datasets should be saved in *Models2/db* with the names *cancer.csv* and  *nocancer.csv*
-
+#IRREGULAR TIME SERIES
 ##THIRD STEP: Running the code using the Command-Line
 Command Line Arguments:
 1. PATH1: path of the dataset for patients WITH cancer 
@@ -56,11 +12,13 @@ Command Line Arguments:
 ***
  
 ***Scripts to be run***:
+
+Before remember to change directory *cd Model_2* and then launch the scripts
 ```bash
-    python main.py dataset/cancer.csv dataset/nocancer.csv 0
-    python main.py dataset/cancer.csv dataset/nocancer.csv 1
-    python main.py dataset/cancer.csv dataset/nocancer.csv 2
-    python main.py dataset/cancer.csv dataset/nocancer.csv 3
+    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
+    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
+    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
+    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
 ```
 ***
 ##FOURTH STEP: Results to download
@@ -77,17 +35,19 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 
 1. Binary classification problem (label 0: no cancer, label 1: cancer)
 
-
-2. Balanced classes (50% patients with cancer, 50% patients without cancer)
-
-
-3. Training set: 95% → 80.271 patients Test set: 5% → 4.225 patients
+2. Total number of patients: 84496
 
 
-4. Minimum time series' length for each patient = 4
+3. Balanced classes (50% patients with cancer, 50% patients without cancer)
 
 
-5. 50 <= age < 100
+4. Training set: 80% Test set: 20% 
+
+
+5. Minimum time series' length for each patient = 4
+
+
+6. 50 <= age < 100
 
 
 ###DIFFERENT TYPES OF INPUT
