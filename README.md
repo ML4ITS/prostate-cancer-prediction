@@ -12,7 +12,7 @@ MODELS 2: Irregular time series
     (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) * 12 * 30 +
     (extract ( month from ambiguous_date) - extract ( month from ss_numbers.date_of_birth_15)) * 30 +
     (extract ( day from ambiguous_date) - extract ( day from ss_numbers.date_of_birth_15)) as days,
-    date_of_birth_15, result_numeric as psa
+    ambiguous_date, date_of_birth_15, result_numeric as psa
     
     FROM ss_numbers, psaresults, kreftreg_data
     
@@ -28,7 +28,7 @@ MODELS 2: Irregular time series
     (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) * 12 * 30 +
     (extract ( month from ambiguous_date) - extract ( month from ss_numbers.date_of_birth_15)) * 30 +
     (extract ( day from ambiguous_date) - extract ( day from ss_numbers.date_of_birth_15)) as days,
-    date_of_birth_15, result_numeric as psa
+    ambiguous_date, date_of_birth_15, result_numeric as psa
     
     FROM (
     SELECT distinct(psaresults.ss_number_id) as id

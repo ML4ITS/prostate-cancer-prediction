@@ -24,6 +24,7 @@ if __name__ == "__main__":
         exit("wrong parameters")
     data1, data2 = upload_db(path1, path2, "days", len=4, model2 = True)
     data1, data2 = remove_outliers(data1), remove_outliers(data2)
+    data2 = balance_db(data1, data2, p.balanced)
 
     #case 0: no dummies no delta
     #case 1: no dummies y delta
@@ -37,7 +38,6 @@ if __name__ == "__main__":
     if i == 2 or i == 3:
         data1, data2 = delete_columns(data1), delete_columns(data2)
 
-    data2 = balance_db(data1, data2, p.balanced)
 
     data1, data2 = assign_target(data1, data2)
 
