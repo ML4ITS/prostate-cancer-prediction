@@ -9,9 +9,6 @@ Command Line Arguments:
 Before remember to change directory *cd Model_1* and then launch the scripts
 ```bash
     python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
-    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
-    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
-    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
 ```
 ***
 ## FOURTH STEP: Results to download
