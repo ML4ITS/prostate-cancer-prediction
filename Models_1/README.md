@@ -6,7 +6,7 @@ Command Line Arguments:
 
 ***Scripts to be run***:
 
-Before remember to change directory *cd Model_1* and then launch the scripts
+Before remember to change directory *cd Model_1* and then launch the script
 ```bash
     python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
 ```
