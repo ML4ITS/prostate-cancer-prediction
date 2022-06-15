@@ -33,11 +33,7 @@ def assign_target(data1, data2):
     data2["risk"] = 0 #no cancer
     return data1, data2
 
-def remove_outliers(data, regularization = False):
-    # """remove patients with age>=100"""
-    # if regularization:
-    #     return data.loc[data['days'] < (100 * 30 * 12)]
-    # else:
+def remove_outliers(data):
     d1 = data.shape[0]
     data = data.loc[data['age'] < 100]
     d2 = data.shape[0]
