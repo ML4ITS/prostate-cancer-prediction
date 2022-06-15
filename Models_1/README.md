@@ -54,7 +54,7 @@ Before remember to change directory *cd Model_1* and then launch the script
 *BINARY VALUE*: 0 means real value while 1 means missing value
 
 
-### MODEL
+### MODELS
 
 *RNN*
 *LSTM*
