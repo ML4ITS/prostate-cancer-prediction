@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from torchmetrics import Specificity, F1Score
+from torchmetrics import Specificity, F1Score, Accuracy
 from torchmetrics.functional import accuracy
 from pytorch_lightning.loggers.csv_logs import CSVLogger
 from torchmetrics.functional import precision_recall
@@ -56,6 +56,9 @@ class CNN1DClassification(pl.LightningModule):
         self.activation = dispatcher[activation]
         self.test_F1score = F1Score()
         self.specificity = Specificity()
+        self.accuracy_train = Accuracy()
+        self.accuracy_val = Accuracy()
+        self.accuracy_test = Accuracy()
         self.target = []
         self.preds = []
         self.prob = []
@@ -86,8 +89,8 @@ class CNN1DClassification(pl.LightningModule):
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
-        acc = accuracy(preds, y)
-        logs = {"train_loss" : loss, "train_acc" : acc}
+        self.accuracy_train.update(preds,y)
+        logs = {"train_loss" : loss, "train_acc" : self.accuracy_train}
         self.log_dict(logs, on_step=False, on_epoch=True, prog_bar=True, logger = True)
         return loss
 
@@ -100,8 +103,8 @@ class CNN1DClassification(pl.LightningModule):
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
-        acc = accuracy(preds, y)
-        logs = {"valid_loss" : loss, "valid_acc" : acc}
+        self.accuracy_val.update(preds,y)
+        logs = {"valid_loss" : loss, "valid_acc" : self.accuracy_val}
         self.log_dict(logs, on_step=False, on_epoch=True, prog_bar=True, logger = True)
         return loss
 
@@ -119,12 +122,12 @@ class CNN1DClassification(pl.LightningModule):
         preds = (preds>0.5).float()
         self.target.extend(y.numpy())
         self.preds.extend((preds.numpy()))
-        self.acc = accuracy(preds, y)
+        self.accuracy_test.update(preds,y)
         self.test_F1score.update(preds,y)
         self.specificity.update(preds,y)
         self.precision, self.recall = precision_recall(preds,y, average = "micro")
         self.log('test_loss', loss, prog_bar=True)
-        self.log('test_acc', self.acc, prog_bar=True)
+        self.log('test_acc', self.accuracy_test, prog_bar=True)
         self.log('f1 score', self.test_F1score)
         self.log('precision', self.precision)
         self.log('recall', self.recall)
@@ -133,7 +136,7 @@ class CNN1DClassification(pl.LightningModule):
 
 
     def test_epoch_end(self, outputs):
-        save_evaluation_metric("cnn1d", self.acc, self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute(), self.case)
+        save_evaluation_metric("cnn1d", self.accuracy_test.compute(), self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute(), self.case)
         #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
