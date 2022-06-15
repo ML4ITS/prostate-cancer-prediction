@@ -39,20 +39,16 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 import seaborn as sn
 from config_file.config_parser import Data
 from utils import get_binary_indicators
-
+from settings import p
 
 def extract_timesteps():
     """extract the maximum timesteps"""
-    p = Data() #get parameters
-    p.extractData()
     data = pd.read_csv("../data_model.csv")
     return data.shape[1] - 1 if p.regularization else data.groupby(["ss_number_id"]).count().max()[0]
 
 def extract_n_features():
     """extract the total number of features from data
     data.shape[1] - 2 because I dont consider the target and the id"""
-    p = Data() #get parameters
-    p.extractData()
     data = pd.read_csv("../data_model.csv")
     if p.regularization:
         size = 2 if p.indicator else 1
@@ -61,8 +57,6 @@ def extract_n_features():
     return size
 
 def manage_db(df):
-    p = Data() #get parameters
-    p.extractData()
     if p.regularization is not True:
         sequences = []
         label = []
@@ -103,8 +97,6 @@ class psaDataset(Dataset):
         y = torch.LongTensor(y)
         self.y = y
         self.seq_len = seq_len
-        p = Data()  # get parameters
-        p.extractData()
         self.indicator = p.indicator
         self.regularization = p.regularization
 
@@ -116,7 +108,6 @@ class psaDataset(Dataset):
         return x,y with dimension x: n_timesteps, n_features
                                 y: scalar value
         """
-
         x = np.array(self.X[index:index+self.seq_len])
         x = torch.FloatTensor(x) if self.regularization else torch.FloatTensor(x[0])
         if self.indicator is True:
@@ -130,8 +121,6 @@ class psaDataModule(pl.LightningDataModule):
     def __init__(self, seq_len=1, batch_size=128):
 
         super().__init__()
-        p = Data()  # get parameters
-        p.extractData()
         self.seq_len = seq_len
         self.batch_size = batch_size
         self.num_workers = 0
@@ -144,7 +133,6 @@ class psaDataModule(pl.LightningDataModule):
         self.y_test = None
         self.preprocessing = StandardScaler()
         self.regularization = p.regularization
-        print(self.regularization)
     def prepare_data(self):
         pass
 

@@ -83,3 +83,18 @@ def get_binary_indicators(x):
     x = np.where(x<0, -x, x)
     x = np.hstack((x.reshape(-1,1), preds.reshape(-1,1))).reshape(x.shape[1], 2)
     return torch.FloatTensor(x)
+
+def combinations(i):
+    switcher = {
+        0: "True,True",
+
+        1: "True,False",
+
+        2: "False,False",
+
+        3: "False,True"
+    }
+    x, y = switcher.get(i).split(",")
+    return str2bool(x), str2bool(y)
+
+
