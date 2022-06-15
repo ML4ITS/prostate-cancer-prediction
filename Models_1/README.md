@@ -43,13 +43,13 @@ Before remember to change directory *cd Model_1* and then launch the scripts
 
 
 ### DIFFERENT TYPES OF INPUT
-INPUT 1: resampling, no interpolation, NaN values --> -1
+*INPUT 1*: resampling, no interpolation, NaN values --> -1
 
-INPUT 2: resampling, no interpolation, NaN values --> -1, binary indicator
+*INPUT 2*: resampling, no interpolation, NaN values --> -1, binary indicator
 
-INPUT 3: resampling, interpolation
+*INPUT 3*: resampling, interpolation
 
-INPUT 4: resampling, interpolation, binary indicator
+*INPUT 4*: resampling, interpolation, binary indicator
 
 ### FEATURES
 *PSA*: real value of the PSA
