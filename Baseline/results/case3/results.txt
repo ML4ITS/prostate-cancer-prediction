@@ -12,5 +12,3 @@ SVM: mean 0.767424 (std 0.181029)
 
 ADABOOST: mean 0.800000 (std 0.120509) 
 
-RF: mean 0.783333 (std 0.122680) 
-

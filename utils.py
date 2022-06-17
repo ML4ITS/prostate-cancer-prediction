@@ -116,4 +116,8 @@ def plot_isomap(data1, data2):
     plt.title("Isomap")
     plt.show()
 
+def heatmap(data, baseline):
+    plt.figure(figsize = (9,9))
+    sn.heatmap(data = data.corr().round(2), cmap = "coolwarm", linewidth = .5, annot = True, annot_kws = {"size":12})
+    plt.savefig(baseline + "/heatmap")
 

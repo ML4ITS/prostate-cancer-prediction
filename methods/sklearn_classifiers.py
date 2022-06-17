@@ -96,11 +96,12 @@ def get_parameters():
     }
 
     params_rf = {
-        'bootstrap': [True],
+        'bootstrap': [True, False],
+        'max_features': ['auto', 'sqrt'],
         'max_depth': [10, 15],
         'min_samples_leaf': [3, 4, 5, 6],
-        'min_samples_split': [3, 4, 5, 6],
-        'n_estimators': [1150, 1200, 1250, 1300, 1350]
+        'min_samples_split': [2, 6, 10],
+        'n_estimators': [5,20,50,100]
     }
     params.append([param_lr, params_lda, params_knn, params_dt, params_nb, params_svm, params_ada, params_rf])
     return params

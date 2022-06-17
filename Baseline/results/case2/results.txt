@@ -1,0 +1,16 @@
+LR: mean 0.350000 (std 0.136829) 
+
+LDA: mean 0.490000 (std 0.202786) 
+
+KNN: mean 0.363333 (std 0.150148) 
+
+DT: mean 0.330000 (std 0.111006) 
+
+NB: mean 0.490000 (std 0.202786) 
+
+SVM: mean 0.350000 (std 0.136829) 
+
+ADABOOST: mean 0.330000 (std 0.111006) 
+
+RF: mean 0.450000 (std 0.196780) 
+
