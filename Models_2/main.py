@@ -23,7 +23,7 @@ if __name__ == "__main__":
     if p.regularization or p.indicator or p.interpolation:
         exit("wrong parameters")
     data1, data2 = upload_db(path1, path2, "days", len=4, model2 = True)
-    data1, data2 = remove_outliers(data1), remove_outliers(data2)
+    # data1, data2 = remove_outliers(data1), remove_outliers(data2)
     data2 = balance_db(data1, data2, p.balanced)
 
     #case 0: no dummies no delta
@@ -45,36 +45,31 @@ if __name__ == "__main__":
     data.to_csv("../data_model.csv", index = False)
 
 #models
-    torch.set_num_threads(5)
-    torch.set_num_interop_threads(5)
+
     accuracy = []
     case = "case" + str(i+1)
+
     #CNN1D
     flush_file("cnn1d", case)
-    acc = []
-    for i in range(p.repetition):
-        results = training_test_CNN1D(p.epochs, p.trials, case)
-        acc.append(list(results[0].values())[1])
+    acc = training_test_CNN1D(p.epochs, p.trials, case, p.repetition)
     accuracy.append(acc)
     get_std_mean_accuracy("cnn1d", acc, case)
+
     # type MLP
     flush_file("mlp", case)
-    acc = []
-    for i in range(p.repetition):
-        results = training_test_MLP(p.epochs, p.trials, case)
-        acc.append(list(results[0].values())[1])
+    acc = training_test_MLP(p.epochs, p.trials, case, p.repetition)
     accuracy.append(acc)
     get_std_mean_accuracy("mlp", acc, case)
+
     #type LSTM
     flush_file("lstm", case)
-    acc = []
-    for i in range(p.repetition):
-        results = training_test_LSTM(p.epochs, p.trials, case)
-        acc.append(list(results[0].values())[1])
+    acc = training_test_LSTM(p.epochs, p.trials, case, p.repetition)
     accuracy.append(acc)
     get_std_mean_accuracy("lstm", acc, case)
+
     #box plot for the 3 models
     multiple_boxplot_models(accuracy, case)
+
     print("Time taken: ", time.time() - start)
 
 

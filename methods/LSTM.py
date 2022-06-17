@@ -119,13 +119,9 @@ class LSTMClassification(pl.LightningModule):
         self.accuracy_test.update(preds,y)
         self.test_F1score.update(preds,y)
         self.specificity.update(preds,y)
-        # self.rec = self.recall(preds, y)
-        # self.prec = self.precision(preds, y)
         self.log('test_loss', loss, prog_bar=True)
         self.log('test_acc', self.accuracy_test, prog_bar=True)
         self.log('f1 score', self.test_F1score)
-        self.log('precision', self.precision)
-        self.log('recall', self.recall)
         self.log('specificity', self.specificity)
         return loss
 
@@ -211,7 +207,7 @@ def hyperparameter_tuning(trials):
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_LSTM(epochs, trials, case):
+def training_test_LSTM(epochs, trials, case, iterations):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
@@ -228,42 +224,44 @@ def training_test_LSTM(epochs, trials, case):
     hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 1024, "hidden_dim_m", step = 64)
     N_FEATURES = extract_n_features()
 
-    model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m, case)
+    accuracy = []
+    for i in range(iterations):
+        model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m, case)
 
-    dm = psaDataModule(batch_size = batch_size)
-    lr_monitor = LearningRateMonitor(logging_interval="step")
-    checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
-                        save_top_k=1,
-                        save_last=True,
-                        save_weights_only=True,
-                        filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
-                        verbose=False,
-                        mode='min')
+        dm = psaDataModule(batch_size = batch_size)
+        lr_monitor = LearningRateMonitor(logging_interval="step")
+        checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
+                            save_top_k=1,
+                            save_last=True,
+                            save_weights_only=True,
+                            filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
+                            verbose=False,
+                            mode='min')
 
-    early_stop_callback = EarlyStopping(
-       monitor='valid_loss',
-       patience=30,
-       verbose=False,
-       mode='min'
-    )
-    logger = CSVLogger(save_dir="logs/")
+        early_stop_callback = EarlyStopping(
+           monitor='valid_loss',
+           patience=30,
+           verbose=False,
+           mode='min'
+        )
+        logger = CSVLogger(save_dir="logs/")
 
-    trainer = pl.Trainer(
-                        accelerator="auto",
-                        devices=1 if torch.cuda.is_available() else None,
-                        max_epochs=epochs,
-                        logger=logger,
-                        callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
-                        )
-    trainer.fit(model, datamodule = dm)
-    torch.save(model, "lstm/" + case + "/model")
-    lstm_model = torch.load( "lstm/" + case + "/model")
-    print("------------STARTING TEST PART------------")
-    results = trainer.test(lstm_model, datamodule=dm)
-    plot_accuracy_loss("lstm", trainer, case)
-    print("------------FINISH TEST PART------------")
-    return results
-
+        trainer = pl.Trainer(
+                            accelerator="auto",
+                            devices=1 if torch.cuda.is_available() else None,
+                            max_epochs=epochs,
+                            logger=logger,
+                            callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
+                            )
+        trainer.fit(model, datamodule = dm)
+        torch.save(model, "lstm/" + case + "/model")
+        lstm_model = torch.load( "lstm/" + case + "/model")
+        print("------------STARTING TEST PART------------")
+        results = trainer.test(lstm_model, datamodule=dm)
+        accuracy.append(list(results[0].values())[1])
+        plot_accuracy_loss("lstm", trainer, case)
+        print("------------FINISH TEST PART------------")
+    return accuracy
 
 
 

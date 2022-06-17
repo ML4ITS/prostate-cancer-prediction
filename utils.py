@@ -32,7 +32,7 @@ def save_evaluation_metric(model, accuracy, f1score, specificity, case):
     f1score = "f1score: " + str(f1score.item()) + "\n"
     specificity = "specificity: " + str(specificity.item()) + "\n"
     next = ".... next ....\n"
-    content = accuracy + f1score + precision + recall + specificity + next
+    content = accuracy + f1score + specificity + next
     file.write(content)
     file.close()
 

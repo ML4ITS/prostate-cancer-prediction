@@ -36,10 +36,7 @@ if __name__ == "__main__":
         #type LSTM
         case = "case" + str(i+1)
         flush_file("lstm", case)
-        acc = []
-        for k in range(m.repetition):
-            results = training_test_LSTM(m.epochs, m.trials, case)
-            acc.append(list(results[0].values())[1])
+        acc = training_test_LSTM(m.epochs, m.trials, case, m.repetition)
         accuracy.append(acc)
     multiple_boxplot_inputs(accuracy)
 

@@ -113,8 +113,6 @@ class MLPClassification(pl.LightningModule):
         self.log('test_loss', loss, prog_bar=True)
         self.log('test_acc', self.accuracy_test, prog_bar=True)
         self.log('f1 score', self.test_F1score)
-        self.log('precision', self.precision)
-        self.log('recall', self.recall)
         self.log('specificity', self.specificity)
         return loss
 
@@ -193,7 +191,7 @@ def hyperparameter_tuning(trials):
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_MLP(epochs, trials, case):
+def training_test_MLP(epochs, trials, case, iterations):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     layers = trial.suggest_int("layers", 1, 15, step=1)
@@ -204,41 +202,45 @@ def training_test_MLP(epochs, trials, case):
     activation = trial.suggest_categorical("activation", ["nn.Tanh()", "nn.ReLU()", "nn.ELU()", "nn.LeakyReLU()","nn.Sigmoid()"])
     timesteps, n_features = extract_timesteps(), extract_n_features()
 
-    MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation, case)
+    accuracy = []
 
-    dm = psaDataModule(batch_size = batch_size)
-    lr_monitor = LearningRateMonitor(logging_interval="step")
-    checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
-                        save_top_k=1,
-                        save_last=True,
-                        save_weights_only=True,
-                        filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
-                        verbose=False,
-                        mode='min')
+    for i in range(iterations):
+        MLPmodel = MLPClassification(n_features, timesteps, learning_rate, layers, dropout, hidden_dimension_size, activation, case)
 
-    early_stop_callback = EarlyStopping(
-       monitor='valid_loss',
-       patience=30,
-       verbose=False,
-       mode='min'
-    )
-    logger = CSVLogger(save_dir="../Models_2/logs/")
+        dm = psaDataModule(batch_size = batch_size)
+        lr_monitor = LearningRateMonitor(logging_interval="step")
+        checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
+                            save_top_k=1,
+                            save_last=True,
+                            save_weights_only=True,
+                            filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
+                            verbose=False,
+                            mode='min')
 
-    trainer = pl.Trainer(
-                        accelerator="auto",
-                        devices = 1 if torch.cuda.is_available() else None,
-                        max_epochs=epochs,
-                        logger=logger,
-                        callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
-                        )
-    trainer.fit(MLPmodel, datamodule = dm)
-    torch.save(MLPmodel, "mlp/" + case + "/model")
-    model = torch.load( "mlp/" + case + "/model")
-    print("------------STARTING TEST PART------------")
-    results = trainer.test(model, datamodule=dm)
-    print("------------FINISH TEST PART------------")
-    plot_accuracy_loss("mlp", trainer, case)
-    return results
+        early_stop_callback = EarlyStopping(
+           monitor='valid_loss',
+           patience=30,
+           verbose=False,
+           mode='min'
+        )
+        logger = CSVLogger(save_dir="../Models_2/logs/")
+
+        trainer = pl.Trainer(
+                            accelerator="auto",
+                            devices = 1 if torch.cuda.is_available() else None,
+                            max_epochs=epochs,
+                            logger=logger,
+                            callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
+                            )
+        trainer.fit(MLPmodel, datamodule = dm)
+        torch.save(MLPmodel, "mlp/" + case + "/model")
+        model = torch.load( "mlp/" + case + "/model")
+        print("------------STARTING TEST PART------------")
+        results = trainer.test(model, datamodule=dm)
+        accuracy.append(list(results[0].values())[1])
+        print("------------FINISH TEST PART------------")
+        plot_accuracy_loss("mlp", trainer, case)
+    return accuracy
 
 
 

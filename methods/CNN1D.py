@@ -125,12 +125,9 @@ class CNN1DClassification(pl.LightningModule):
         self.accuracy_test.update(preds,y)
         self.test_F1score.update(preds,y)
         self.specificity.update(preds,y)
-        self.precision, self.recall = precision_recall(preds,y, average = "micro")
         self.log('test_loss', loss, prog_bar=True)
         self.log('test_acc', self.accuracy_test, prog_bar=True)
         self.log('f1 score', self.test_F1score)
-        self.log('precision', self.precision)
-        self.log('recall', self.recall)
         self.log('specificity', self.specificity)
         return loss
 
@@ -213,7 +210,7 @@ def hyperparameter_tuning(trials):
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_CNN1D(epochs, trials, case):
+def training_test_CNN1D(epochs, trials, case, iterations):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     n_features = extract_n_features()
@@ -229,42 +226,44 @@ def training_test_CNN1D(epochs, trials, case):
     dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
     hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m",step=64)
 
+    accuracy = []
+    for i in range(iterations):
+        model = CNN1DClassification(n_features, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding, case)
 
-    model = CNN1DClassification(n_features, learning_rate, layers_c, n_filters, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding, case)
+        dm = psaDataModule(batch_size = batch_size)
+        lr_monitor = LearningRateMonitor(logging_interval="step")
+        checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
+                            save_top_k=1,
+                            save_last=True,
+                            save_weights_only=True,
+                            filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
+                            verbose=False,
+                            mode='min')
 
-    dm = psaDataModule(batch_size = batch_size)
-    lr_monitor = LearningRateMonitor(logging_interval="step")
-    checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
-                        save_top_k=1,
-                        save_last=True,
-                        save_weights_only=True,
-                        filename='checkpoint/{epoch:02d}-{val_loss:.4f}',
-                        verbose=False,
-                        mode='min')
+        early_stop_callback = EarlyStopping(
+           monitor='valid_loss',
+           patience=30,
+           verbose=False,
+           mode='min'
+        )
+        logger = CSVLogger(save_dir="../Models_2/logs/")
 
-    early_stop_callback = EarlyStopping(
-       monitor='valid_loss',
-       patience=30,
-       verbose=False,
-       mode='min'
-    )
-    logger = CSVLogger(save_dir="../Models_2/logs/")
-
-    trainer = pl.Trainer(
-                        accelerator="auto",
-                        devices=1 if torch.cuda.is_available() else None,
-                        max_epochs=epochs,
-                        logger=logger,
-                        callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
-                        )
-    trainer.fit(model, datamodule = dm)
-    torch.save(model, "cnn1d/" + case + "/model")
-    cnn1d_model = torch.load("cnn1d/" + case + "/model")
-    print("------------STARTING TEST PART------------")
-    results = trainer.test(cnn1d_model, datamodule=dm)
-    plot_accuracy_loss("cnn1d", trainer, case)
-    print("------------FINISH TEST PART------------")
-    return results
+        trainer = pl.Trainer(
+                            accelerator="auto",
+                            devices=1 if torch.cuda.is_available() else None,
+                            max_epochs=epochs,
+                            logger=logger,
+                            callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
+                            )
+        trainer.fit(model, datamodule = dm)
+        torch.save(model, "cnn1d/" + case + "/model")
+        cnn1d_model = torch.load("cnn1d/" + case + "/model")
+        print("------------STARTING TEST PART------------")
+        results = trainer.test(cnn1d_model, datamodule=dm)
+        accuracy.append(list(results[0].values())[1])
+        plot_accuracy_loss("cnn1d", trainer, case)
+        print("------------FINISH TEST PART------------")
+    return accuracy
 
 
 
