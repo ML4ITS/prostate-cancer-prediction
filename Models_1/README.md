@@ -33,7 +33,7 @@ Before remember to change directory *cd Model_1* and then launch the script
 4. Training set: 80% Test set: 20% 
 
 
-5. Minimum time series' length for each patient = 4
+5. Minimum time series' length for each patient = 5
 
 
 6. 50 <= age < 100

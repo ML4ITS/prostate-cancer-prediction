@@ -44,7 +44,7 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 4. Training set: 80% Test set: 20% 
 
 
-5. Minimum time series' length for each patient = 4
+5. Minimum time series' length for each patient = 5
 
 
 6. 50 <= age < 100
