@@ -8,6 +8,7 @@ import torch.nn as nn
 import argparse
 import functools
 from sklearn.manifold import Isomap
+from sklearn.inspection import permutation_importance
 
 dispatcher= {'nn.Tanh()': nn.Tanh(), 'nn.ReLU()': nn.ReLU(), 'nn.ELU()': nn.ELU(), 'nn.LeakyReLU()': nn.LeakyReLU(), 'nn.Sigmoid()': nn.Sigmoid()}
 
@@ -25,12 +26,10 @@ def get_random_numbers(layers, trial, min, max, element, int = True, desc = True
 def get_kernel_size(input_size, output_size,padding):
     return 2 * padding + input_size + 1 - output_size
 
-def save_evaluation_metric(model, accuracy, f1score, precision, recall, specificity, case):
+def save_evaluation_metric(model, accuracy, f1score, specificity, case):
     file = open(model+ "/" + case +"/results.txt", "a+")
     accuracy = "accuracy: " + str(accuracy.item()) + "\n"
     f1score = "f1score: " + str(f1score.item()) + "\n"
-    precision = "precision: " + str(precision.item()) + "\n"
-    recall = "recall: " + str(recall.item()) + "\n"
     specificity = "specificity: " + str(specificity.item()) + "\n"
     next = ".... next ....\n"
     content = accuracy + f1score + precision + recall + specificity + next
@@ -106,18 +105,32 @@ def combinations(i):
     x, y = switcher.get(i).split(",")
     return str2bool(x), str2bool(y)
 
-def plot_isomap(data1, data2):
+def plot_isomap(data1, data2, baseline):
     embedding = Isomap(n_components = 2)
     dat = pd.concat([data1.iloc[:50, :-1], data2.iloc[:50, :-1]])
-    color = pd.concat([data1.iloc[:50, :-1], data2.iloc[:50, :-1]])
+    color = pd.concat([data1.iloc[:50, -1], data2.iloc[:50, -1]])
     X_iso = embedding.fit_transform(dat)
     plt.figure(figsize = (10, 6))
     plt.scatter(X_iso[:,0], X_iso[:,1], c = color, cmap = plt.cm.rainbow)
     plt.title("Isomap")
-    plt.show()
+    plt.savefig(baseline + "/isomap")
 
 def heatmap(data, baseline):
     plt.figure(figsize = (9,9))
     sn.heatmap(data = data.corr().round(2), cmap = "coolwarm", linewidth = .5, annot = True, annot_kws = {"size":12})
     plt.savefig(baseline + "/heatmap")
+
+def feature_importance(X_test, y_test, model, baseline, name):
+    feature_names = [f"feature{i}" for i in range(X_test.shape[1])]
+    result = permutation_importance(model, X_test, y_test, n_repeats = 10, random_state = 42, n_jobs = 2)
+    importances = pd.Series(result.importances_mean, index = feature_names)
+    fig, ax = plt.subplots()
+    importances.plot.bar(yerr = result.importances_std, ax = ax)
+    ax.set_title("feature importances using permutation on full model")
+    ax.set_ylabel("mean accuracy decrease")
+    fig.tight_layout()
+    plt.savefig(baseline + "/feature_importance_"+ name)
+
+
+
 

@@ -18,11 +18,13 @@ if __name__ == "__main__":
     p.regularization = False #set regularization parameter
     #baseline 1 val1 = 2 val2 = 1
     #baseline 3 val1 = 3 val2 = 2
-    for baseline in range(1, 4):
-        data1, data2 = upload_db(path1, path2, "days", len=4)
+    for baseline in range(1, 3):
+        data1, data2 = upload_db(path1, path2, "days", len=5)
         # data1, data2 = remove_outliers(data1), remove_outliers(data2)
         data2 = balance_db(data1, data2, m.balanced)
-        if baseline == 1 or baseline == 3:
+        if baseline == 1:
+            data1, data2 = extract_last_value_wrapp(data1, data2, val1=2, val2=1)
+        if baseline == 3:
             data1, data2 = extract_last_value_wrapp(data1, data2, val1 = 3, val2 = 2) #first / third
         if baseline == 2:
             data1, data2 = extract_delta_wrapp(data1, data2) #second
@@ -32,10 +34,10 @@ if __name__ == "__main__":
         if baseline != 2:
             data1, data2 = clean_df_wrapp(data1, data2, baseline)
         data1, data2 = assign_target(data1, data2)
-        # plot_isomap(data1, data2)
+        case = "results/case" + str(baseline)
+        plot_isomap(data1, data2, case)
         data = concat_data(data1, data2)
         print(data.head())
-        case = "results/case" + str(baseline)
         heatmap(data, case)
         classifiers(data, case)
 

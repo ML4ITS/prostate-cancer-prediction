@@ -136,7 +136,7 @@ class CNN1DClassification(pl.LightningModule):
 
 
     def test_epoch_end(self, outputs):
-        save_evaluation_metric("cnn1d", self.accuracy_test.compute(), self.test_F1score.compute(), self.precision, self.recall, self.specificity.compute(), self.case)
+        save_evaluation_metric("cnn1d", self.accuracy_test.compute(), self.test_F1score.compute(), self.specificity.compute(), self.case)
         #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)

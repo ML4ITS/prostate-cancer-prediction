@@ -46,7 +46,7 @@ def assign_target(data1, data2):
 
 def remove_outliers(data):
     d1 = data.shape[0]
-    data = data.loc[50 <= data['age'] < 100]
+    data = data.loc[(data['age'] >=50) & (data['age'] < 100)]
     d2 = data.shape[0]
     print("Outliers removed: " + str(d1 - d2))
     return data

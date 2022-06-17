@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../')
 import numpy as np
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
@@ -15,6 +17,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
+from utils import *
 
 
 def boxplot(results, names, baseline):
@@ -127,5 +130,6 @@ def classifiers(data, baseline):
         results.append(cv_results)
         names.append(name)
         save_evaluation_metric(name, cv_results.mean(), cv_results.std(), baseline)
+        feature_importance(X_test, y_test, model, baseline, name)
         index += 1
     boxplot(results, names, baseline)
