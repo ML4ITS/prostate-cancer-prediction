@@ -19,7 +19,7 @@ if __name__ == "__main__":
     #baseline 1 val1 = 2 val2 = 1
     #baseline 3 val1 = 3 val2 = 2
     for baseline in range(1, 3):
-        data1, data2 = upload_db(path1, path2, "days", len=5)
+        data1, data2 = upload_db(path1, path2, "days", len=4)
         # data1, data2 = remove_outliers(data1), remove_outliers(data2)
         data2 = balance_db(data1, data2, m.balanced)
         if baseline == 1:
