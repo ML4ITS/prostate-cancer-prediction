@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import torch.nn as nn
 import argparse
 import functools
+from sklearn.manifold import Isomap
 
 dispatcher= {'nn.Tanh()': nn.Tanh(), 'nn.ReLU()': nn.ReLU(), 'nn.ELU()': nn.ELU(), 'nn.LeakyReLU()': nn.LeakyReLU(), 'nn.Sigmoid()': nn.Sigmoid()}
 
@@ -104,5 +105,15 @@ def combinations(i):
     }
     x, y = switcher.get(i).split(",")
     return str2bool(x), str2bool(y)
+
+def plot_isomap(data1, data2):
+    embedding = Isomap(n_components = 2)
+    dat = pd.concat([data1.iloc[:50, :-1], data2.iloc[:50, :-1]])
+    color = pd.concat([data1.iloc[:50, :-1], data2.iloc[:50, :-1]])
+    X_iso = embedding.fit_transform(dat)
+    plt.figure(figsize = (10, 6))
+    plt.scatter(X_iso[:,0], X_iso[:,1], c = color, cmap = plt.cm.rainbow)
+    plt.title("Isomap")
+    plt.show()
 
 
