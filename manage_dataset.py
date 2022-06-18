@@ -33,8 +33,8 @@ def upload_db(path1, path2, column, len = 4, model2 = False):
         data1, data2 = from_days_to_months(data1, data2)
     v = data1.ss_number_id.value_counts()
     data1 = data1[data1.ss_number_id.isin(v.index[v.gt(len)])]
-    v = data2.ss_number_id.value_counts()
-    data2 = data2[data2.ss_number_id.isin(v.index[v.gt(len)])]
+    v1 = data2.ss_number_id.value_counts()
+    data2 = data2[data2.ss_number_id.isin(v1.index[v1.gt(len)])]
     print("Number of patients with cancer: "+ str(data1["ss_number_id"].nunique()))
     print("Number of patients without cancer: "+ str(data2["ss_number_id"].nunique()))
     return data1, data2

@@ -45,7 +45,7 @@ def extract_velocity_wrapp(data1, data2):
             lambda x: x - x.shift()).fillna(np.nan)
         data.dropna(inplace=True)
         data.reset_index(drop=True, inplace=True)
-        data["velocity"] = data["delta_x"] / data["delta_y"]
+        data["velocity"] = data["delta_x"] * 30 / data["delta_y"]
         return data
     data1, data2 = extract_velocity(data1), extract_velocity(data2)
     return data1, data2
@@ -71,7 +71,6 @@ def concat_data(data1, data2):
     data.reset_index(drop = True, inplace = True)
     print("Number of patients: " + str(data["ss_number_id"].nunique()))
     print(data.head())
-    print(data[data["ss_number_id"] == 30])
     del data["ss_number_id"]
     print("Features: " + str(data.columns))
     data.reset_index(drop = True, inplace = True)
