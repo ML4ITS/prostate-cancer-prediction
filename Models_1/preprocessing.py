@@ -47,18 +47,21 @@ def prepare_df_wrapp(data1, data2):
     data2 = prepare_df(data2)
     return data1, data2
 
-def get_interp(data, frequency):
+def get_interp(data, frequency, indicator):
     ris = data["psa"].resample(frequency).mean().fillna(-1)
     nan = (np.array(ris) != -1).astype(int)
     ris[ris == -1] = np.nan
     inter = ris.interpolate(method = "linear", limit_direction = "both")
     nan[nan == 0] = -1
-    return inter * nan
+    if indicator:
+        return inter * nan
+    else:
+        return inter
 
-def interpolation_data(data1, data2, interp = False, frequency = "6M"):
+def interpolation_data(data1, data2, indicator, interp = False, frequency = "6M"):
     def interpolation(data, interp):
         if interp:
-            return data.groupby("ss_number_id").apply(lambda x: get_interp(x, frequency))
+            return data.groupby("ss_number_id").apply(lambda x: get_interp(x, frequency, indicator))
         else:
             return data.groupby("ss_number_id")["psa"].resample(frequency).mean().fillna(-1).unstack("date")
     return interpolation(data1, interp), interpolation(data2, interp)

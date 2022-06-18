@@ -3,22 +3,13 @@
 Command Line Arguments:
 1. PATH1: path of the dataset for patients WITH cancer 
 2. PATH2: path of the dataset for patients WITHOUT cancer
-3. TYPE OF INPUT: 0 /  1 / 2 / 3
-***
-    0: no dummies no delta
-    1: no dummies yes delta
-    2: yes dummies no delta
-    3: yes dummies yes delta
-***
- 
+
+
 ***Scripts to be run***:
 
-Before remember to change directory *cd Model_2* and then launch the scripts
+Before remember to change directory *cd Model_2* and then launch the script
 ```bash
-    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 0
-    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 1
-    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 2
-    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 3
+    python main.py ../dataset/cancer.csv ../dataset/nocancer.csv 
 ```
 ***
 ## FOURTH STEP: Results to download
@@ -52,11 +43,11 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 
 ### DIFFERENT TYPES OF INPUT
 
-|age              | psa              | -             | -              |
-|-----------------|------------------|---------------|----------------|
-|  **age**        | **psa**          | **delta_psa** | **delta_time** |
-| **dummies(age)** | **dummies(psa)** | -             | -              |
-| **dummies(age)** | **dummies(psa)** | **delta_psa** | **delta_time** |
+| age           | psa           | -             | -              |
+|---------------|---------------|---------------|----------------|
+| **age**       | **psa**       | **delta_psa** | **delta_time** |
+| **hoe(age)*** | **hoe(psa)*** | -             | -              |
+| **hoe(age)*** | **hoe(psa)*** | **delta_psa** | **delta_time** |
 
 *AGE*: age of the patient
 
@@ -66,6 +57,7 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 
 *DELTA_TIME*: different between time t and time t-1 (in months)
 
+*hoe means One Hot Encoding
 
 ### DIFFERENT MODELS
 

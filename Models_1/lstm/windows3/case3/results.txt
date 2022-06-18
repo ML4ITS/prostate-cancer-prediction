@@ -1,0 +1,8 @@
+accuracy: 0.6666666865348816
+f1score: 0.0
+specificity: 1.0
+.... next ....
+accuracy: 0.4000000059604645
+f1score: 0.5714285969734192
+specificity: 0.0
+.... next ....

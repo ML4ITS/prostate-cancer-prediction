@@ -78,13 +78,13 @@ def multiple_boxplot_models(accuracy, case):
     # Display the plot
     plt.savefig("boxplot/" + case + "/table.png")
 
-def multiple_boxplot_inputs(accuracy):
+def multiple_boxplot_inputs(accuracy, path):
     # Pandas dataframe
     data = pd.DataFrame({"NO_INTERP": accuracy[2], "NO_INTERP+INDIC": accuracy[3], "INTERP": accuracy[1], "INTERP+INDIC": accuracy[0] })
     # Plot the dataframe
     ax = data[["NO_INTERP", "NO_INTERP+INDIC", "INTERP", "INTERP+INDIC"]].plot(kind='box', title='boxplot')
     # Display the plot
-    plt.savefig("boxplot.png")
+    plt.savefig(path + "_boxplot.png")
 
 def get_binary_indicators(x):
     preds = (x < 0).float()

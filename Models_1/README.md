@@ -12,14 +12,16 @@ Before remember to change directory *cd Model_1* and then launch the script
 ```
 ***
 ## FOURTH STEP: Results to download
-* The folders *lstm* contain 4 sub-folders (one for each type of input). In the single folder there are the following outputs:
+* The folders *lstm* contain 4 sub-folders (one for each type of *window_size*). 
+Each sub-folder contain 4 sub-folders (one for each type of input).
+In the single folder there are the following outputs:
   1. the confusion matrix (conf_mat.png)
   2. the ROC curve (roc_curve.png)
   3. the model 
   4. the metrics (results.txt)
   5. a table with accuracy/loss curve
 
-* *boxplot.png* 
+* 4 *boxplots*, one for each *window size* 
 
 ### TYPE OF PROBLEM
 
