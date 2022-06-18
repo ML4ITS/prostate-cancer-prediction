@@ -50,6 +50,6 @@ MODELS 2: Irregular time series
 
 The datasets should be saved in the folder *dataset* with the names *cancer.csv* and  *nocancer.csv*
 
-## THIRD STEP: 
+## THIRD STEP: Run the code
 1. CD prostate-cancer-prediction
 2. Launch the bash script *commands.sh*
