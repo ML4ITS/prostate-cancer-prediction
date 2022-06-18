@@ -84,6 +84,7 @@ def multiple_boxplot_inputs(accuracy, path):
     # Plot the dataframe
     ax = data[["NO_INTERP", "NO_INTERP+INDIC", "INTERP", "INTERP+INDIC"]].plot(kind='box', title='boxplot')
     # Display the plot
+    plt.title(path)
     plt.savefig(path + "_boxplot.png")
 
 def get_binary_indicators(x):

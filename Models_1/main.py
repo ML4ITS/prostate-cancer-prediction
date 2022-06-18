@@ -42,7 +42,7 @@ if __name__ == "__main__":
             flush_file("lstm", case)
             acc = training_test_LSTM(m.epochs, m.trials, case, m.repetition)
             accuracy.append(acc)
-        multiple_boxplot_inputs(accuracy, path = "windows" + str(k+1))
+        multiple_boxplot_inputs(accuracy, path = "window_size_" + str(k+1))
 
 
 

@@ -15,8 +15,8 @@ if __name__ == "__main__":
     start = time.time()
     #parameters from command line
     _, path1, path2 = sys.argv
-    p = Data() #get parameters
-    p.extractData()
+    m = Data() #get parameters
+    m.extractData()
     p.regularization = p.indicator = p.interpolation = False
     if p.regularization or p.indicator or p.interpolation:
         exit("wrong parameters")
@@ -50,19 +50,19 @@ if __name__ == "__main__":
 
         #CNN1D
         flush_file("cnn1d", case)
-        acc = training_test_CNN1D(p.epochs, p.trials, case, p.repetition)
+        acc = training_test_CNN1D(p.epochs, p.trials, case, m.repetition)
         accuracy.append(acc)
         get_std_mean_accuracy("cnn1d", acc, case)
 
         # type MLP
         flush_file("mlp", case)
-        acc = training_test_MLP(p.epochs, p.trials, case, p.repetition)
+        acc = training_test_MLP(p.epochs, p.trials, case, m.repetition)
         accuracy.append(acc)
         get_std_mean_accuracy("mlp", acc, case)
 
         #type LSTM
         flush_file("lstm", case)
-        acc = training_test_LSTM(p.epochs, p.trials, case, p.repetition)
+        acc = training_test_LSTM(p.epochs, p.trials, case, m.repetition)
         accuracy.append(acc)
         get_std_mean_accuracy("lstm", acc, case)
 
