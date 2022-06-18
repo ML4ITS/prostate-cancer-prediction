@@ -48,9 +48,7 @@ def split_train_test(data):
     return X_train, X_test, y_train, y_test
 
 def get_models():
-    models = [('LR', LogisticRegression(random_state=42)),
-              ('LDA', LinearDiscriminantAnalysis()),
-              ('KNN', KNeighborsClassifier()),
+    models = [('KNN', KNeighborsClassifier()),
               ('DT', DecisionTreeClassifier(random_state=42)),
               ('NB', GaussianNB()),
               ('SVM', SVC(random_state=42)),
@@ -60,17 +58,6 @@ def get_models():
 
 def get_parameters():
     params = []
-
-    param_lr = {
-         'penalty': ['l1', 'l2', 'elasticnet'],
-         'C': np.logspace(-4, 4, 20),
-         'solver': ['lbfgs', 'newton-cg', 'liblinear', 'sag', 'saga'],
-         'max_iter': [100, 1000, 2500, 5000]
-    }
-
-    params_lda = {
-        'solver': ['svd', 'lsqr']
-    }
 
     params_knn = {
         'leaf_size': list(range(1, 50)),
@@ -104,9 +91,9 @@ def get_parameters():
         'max_depth': [10, 15],
         'min_samples_leaf': [3, 4, 5, 6],
         'min_samples_split': [2, 6, 10],
-        'n_estimators': [5,20,50,100]
+        'n_estimators': [5,20]
     }
-    params.append([param_lr, params_lda, params_knn, params_dt, params_nb, params_svm, params_ada, params_rf])
+    params.append([params_knn, params_dt, params_nb, params_svm, params_ada, params_rf])
     return params
 
 def classifiers(data, baseline):
