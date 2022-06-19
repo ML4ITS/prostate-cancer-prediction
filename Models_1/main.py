@@ -20,7 +20,7 @@ if __name__ == "__main__":
         exit("wrong parameters")
     # 4 case: interpolation, no interpolation and the advanced cases
 
-    windows = ["24h", "1d", "2d", "3d"]
+    windows = ["6M", "1Y", "2Y", "6Y"]
     for k in range(4):
         accuracy = []
         window = windows[k]

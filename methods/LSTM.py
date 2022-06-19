@@ -166,12 +166,12 @@ def objective(trial: optuna.trial.Trial) -> float:
 
     early_stop_callback = EarlyStopping(
         monitor='valid_loss',
-        patience=30,
+        patience=10,
         verbose=False,
         mode='min'
     )
 
-    EPOCHS = 1
+    EPOCHS = 40
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,

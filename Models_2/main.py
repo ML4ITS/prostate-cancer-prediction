@@ -37,7 +37,6 @@ if __name__ == "__main__":
         if i == 2 or i == 3:
             data1, data2 = delete_columns(data1), delete_columns(data2)
 
-
         data1, data2 = assign_target(data1, data2)
 
         data = concat_data(data1, data2)
