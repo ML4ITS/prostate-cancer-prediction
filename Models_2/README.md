@@ -14,7 +14,7 @@ Before remember to change directory *cd Model_2* and then launch the script
 ```
 ***
 ## FOURTH STEP: Results to download
-The folders *cnn1d*, *lstm*, *mlp* contain 4 sub-folders (one for each type of input). In the single folder there are the following outputs:
+The folders *cnn1d*, *lstm*, *mlp*, *cnn1d_heads* contain 4 sub-folders (one for each type of input). In the single folder there are the following outputs:
 1. the confusion matrix (conf_mat.png)
 2. the ROC curve (roc_curve.png)
 3. the model 
@@ -64,8 +64,9 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 
 *LSTM* 
 
-*CNN1D*
+*CNN*
 
 *MLP*
 
+*Multi Head CNN*
 

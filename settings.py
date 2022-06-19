@@ -5,4 +5,6 @@ class p(object):
 
     indicator = None
 
+    multiple_kernels = None
+
 

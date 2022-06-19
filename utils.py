@@ -72,9 +72,9 @@ def str2bool(v):
 
 def multiple_boxplot_models(accuracy, case):
     # Pandas dataframe
-    data = pd.DataFrame({"CNN1D": accuracy[0], "MLP": accuracy[1], "LSTM": accuracy[2] })
+    data = pd.DataFrame({"CNN1D": accuracy[0], "MLP": accuracy[1], "LSTM": accuracy[2], "MULTIPLE_KERN": accuracy[3]})
     # Plot the dataframe
-    ax = data[['CNN1D', 'MLP', 'LSTM']].plot(kind='box', title='boxplot')
+    ax = data[['CNN1D', 'MLP', 'LSTM', 'MULTIPLE_KERN']].plot(kind='box', title='boxplot')
     # Display the plot
     plt.savefig("boxplot/" + case + "/table.png")
 
