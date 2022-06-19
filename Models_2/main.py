@@ -28,7 +28,7 @@ if __name__ == "__main__":
     for i in range(4):
         data1, data2 = upload_db(path1, path2, "days", len=4, model2 = True)
         # data1, data2 = remove_outliers(data1), remove_outliers(data2)
-        data2 = balance_db(data1, data2, p.balanced)
+        data2 = balance_db(data1, data2, m.balanced)
 
         if i == 2 or i == 3:
             data1, data2 = get_dummies_data(data1), get_dummies_data(data2)
@@ -48,21 +48,21 @@ if __name__ == "__main__":
         accuracy = []
         case = "case" + str(i+1)
 
-        #CNN1D
+        # type CNN1D
         flush_file("cnn1d", case)
-        acc = training_test_CNN1D(p.epochs, p.trials, case, m.repetition)
+        acc = training_test_CNN1D(m.epochs, m.trials, case, m.repetition)
         accuracy.append(acc)
         get_std_mean_accuracy("cnn1d", acc, case)
 
         # type MLP
         flush_file("mlp", case)
-        acc = training_test_MLP(p.epochs, p.trials, case, m.repetition)
+        acc = training_test_MLP(m.epochs, m.trials, case, m.repetition)
         accuracy.append(acc)
         get_std_mean_accuracy("mlp", acc, case)
 
         #type LSTM
         flush_file("lstm", case)
-        acc = training_test_LSTM(p.epochs, p.trials, case, m.repetition)
+        acc = training_test_LSTM(m.epochs, m.trials, case, m.repetition)
         accuracy.append(acc)
         get_std_mean_accuracy("lstm", acc, case)
 
