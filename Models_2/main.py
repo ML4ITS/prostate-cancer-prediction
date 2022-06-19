@@ -66,6 +66,13 @@ if __name__ == "__main__":
         accuracy.append(acc)
         get_std_mean_accuracy("lstm", acc, case)
 
+        #type convolutional heads
+        p.multiple_kernels = True
+        flush_file("cnn1d_heads", case)
+        acc = training_test_CNN1D(m.epochs, m.trials, case, m.repetition, m_kernels = p.multiple_kernels)
+        accuracy.append(acc)
+        get_std_mean_accuracy("cnn1d_heads", acc, case)
+
         #box plot for the 3 models
         multiple_boxplot_models(accuracy, case)
 
