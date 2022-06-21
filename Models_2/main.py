@@ -10,6 +10,7 @@ from utils import *
 from preprocessing import *
 from settings import p
 import time
+from rocket import rocket_alg
 
 if __name__ == "__main__":
     start = time.time()
@@ -40,12 +41,14 @@ if __name__ == "__main__":
         data1, data2 = assign_target(data1, data2)
 
         data = concat_data(data1, data2)
+
         data.to_csv("../data_model.csv", index = False)
 
-        #models
-
-        accuracy = []
         case = "case" + str(i+1)
+
+        #type ROCKET
+        rocket_algorithm(data, case,  m.repetition)
+        accuracy = []
 
         # type CNN1D
         flush_file("cnn1d", case)
