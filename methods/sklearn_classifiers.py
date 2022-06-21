@@ -96,27 +96,30 @@ def get_parameters():
     params.append([params_knn, params_dt, params_nb, params_svm, params_ada, params_rf])
     return params
 
-def classifiers(data, baseline):
-    X_train, X_test, y_train, y_test = split_train_test(data)
+def classifiers(data, baseline, iterations):
+    x = np.array(data.iloc[:, :-1])
+    y = np.array(data.iloc[:, -1])
+    #same db every time
+    x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=0.8, random_state=42, shuffle = True)
     flush_file(baseline)
     models = get_models()
     params = get_parameters()[0]
-    seed = 50
     results = []
     names = []
-    scoring = 'accuracy'
     index = 0
     for name, model in models:
         grid_search = GridSearchCV(estimator= model,
                                    param_grid=params[index],
                                    cv=5, n_jobs=-1, verbose=1, scoring="accuracy")
-        grid_search.fit(X_train, y_train)
+        grid_search.fit(x_train, y_train)
         model = grid_search.best_estimator_
-        kfold = model_selection.KFold(n_splits=10, random_state=seed, shuffle = True)
-        cv_results = model_selection.cross_val_score(model, X_train, y_train, cv=kfold, scoring=scoring)
-        results.append(cv_results)
+        accuracy = []
+        for i in range(iterations):
+            model.fit(x_train, y_train)
+            accuracy.append(accuracy_score(y_test, model.predict(x_test)))
+        results.append(accuracy)
         names.append(name)
-        save_evaluation_metric(name, cv_results.mean(), cv_results.std(), baseline)
-        feature_importance(X_test, y_test, model, baseline, name)
+        save_evaluation_metric(name, np.mean(accuracy), np.std(accuracy), baseline)
+        feature_importance(x_test, y_test, model, baseline, name)
         index += 1
     boxplot(results, names, baseline)
