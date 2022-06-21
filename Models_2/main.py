@@ -6,11 +6,12 @@ from manage_dataset import *
 from methods.CNN1D import training_test_CNN1D
 from methods.LSTM import training_test_LSTM
 from methods.MLP import training_test_MLP
+from methods.inception_time import *
 from utils import *
 from preprocessing import *
 from settings import p
 import time
-from rocket import rocket_alg
+from rocket import rocket_algorithm
 
 if __name__ == "__main__":
     start = time.time()
