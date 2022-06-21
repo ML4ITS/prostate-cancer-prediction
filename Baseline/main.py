@@ -39,5 +39,5 @@ if __name__ == "__main__":
         data = concat_data(data1, data2)
         print(data.head())
         heatmap(data, case)
-        classifiers(data, case)
+        classifiers(data, case, m.repetition)
 
