@@ -145,8 +145,8 @@ class psaDataModule(pl.LightningDataModule):
             return
         data = pd.read_csv("../data_model.csv")
         x,y = manage_db(data)
-        #every time I call train_test_split, test and train should be different
-        x, test, y, test_y = train_test_split(x, y, train_size=0.8, shuffle=True, random_state = None)
+        #every time I call train_test_split, test and train are the same
+        x, test, y, test_y = train_test_split(x, y, train_size=0.8, shuffle=True, random_state = 42)
         print("SHAPE TRAIN: "+ str(x.shape))
         print("SHAPE TEST: " + str(test.shape))
         X_train, X_val, y_train, y_val = train_test_split(x, y, test_size=0.2, shuffle=True, random_state = None)
