@@ -13,6 +13,7 @@ cd ../Models_2
 find lstm -type f -delete
 find cnn1d -type f -delete
 find cnn1d_heads -type f -delete
+find rocket -type f -delete
 find mlp -type f -delete
 rm -r lightning_logs
 rm -r logs
