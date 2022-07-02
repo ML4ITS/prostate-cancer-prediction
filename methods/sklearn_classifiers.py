@@ -3,18 +3,11 @@ sys.path.append('../')
 import numpy as np
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, accuracy_score
-import matplotlib.pyplot as plt, seaborn as sns
-from sklearn.utils.fixes import loguniform
-from sklearn import tree
-from sklearn import model_selection
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from utils import *
@@ -96,11 +89,9 @@ def get_parameters():
     params.append([params_knn, params_dt, params_nb, params_svm, params_ada, params_rf])
     return params
 
-def classifiers(data, baseline, iterations):
-    x = np.array(data.iloc[:, :-1])
-    y = np.array(data.iloc[:, -1])
-    #same db every time
-    x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=0.8, random_state=42, shuffle = True)
+def classifiers(train, test, baseline, iterations):
+    x_train, x_test = np.array(train.iloc[:, :-1]), np.array(test.iloc[:, :-1])
+    y_train, y_test = np.array(train.iloc[:, -1]), np.array(test.iloc[:, -1])
     flush_file(baseline)
     models = get_models()
     params = get_parameters()[0]
