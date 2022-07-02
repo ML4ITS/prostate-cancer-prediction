@@ -14,12 +14,12 @@ MODELS 2: Irregular time series
     (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) * 12 * 30 +
     (extract ( month from ambiguous_date) - extract ( month from ss_numbers.date_of_birth_15)) * 30 +
     (extract ( day from ambiguous_date) - extract ( day from ss_numbers.date_of_birth_15)) as days,
-    ambiguous_date, date_of_birth_15, result_numeric as psa
+    ambiguous_date, date_of_birth_15, result_numeric as psa, npcc_risk_class_group_1 as category
     
     FROM ss_numbers, psaresults, kreftreg_data
     
     WHERE diagnosis_date >= ambiguous_date and psaresults.ss_number_id = kreftreg_data.ss_number_id and
-        ss_numbers.ss_number_id = psaresults.ss_number_id and (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) >= 50
+        ss_numbers.ss_number_id = psaresults.ss_number_id and (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) >= 30
 ***
 
 
@@ -44,7 +44,7 @@ MODELS 2: Irregular time series
         WHERE kreftreg_data.ss_number_id is NULL) as tab, ss_numbers, psaresults
 
     WHERE tab.id =  psaresults.ss_number_id and 
-        ss_numbers.ss_number_id = psaresults.ss_number_id and (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) >= 50
+        ss_numbers.ss_number_id = psaresults.ss_number_id and (extract ( year from ambiguous_date) - extract ( year from ss_numbers.date_of_birth_15)) >= 30
 ***
 ## SECOND STEP: Save the dataset
 

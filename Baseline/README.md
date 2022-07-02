@@ -28,16 +28,16 @@ Before remember to change directory *cd Baseline* and then launch the script
 
 2. Total number of patients: 84496
 
-3. Balanced classes (50% patients with cancer, 50% patients without cancer)
+3. Balanced classes (50% patients with cancer, 50% patients without cancer) only for the training part
 
 
 4. Training set: 80% Test set: 20% 
 
 
-5. Minimum time series' length for each patient = 4
+5. Minimum time series' length for each patient = 5
 
 
-6. 50 <= age < 100
+6. 30 <= age < 100
 
 
 ### DIFFERENT TYPES OF INPUT

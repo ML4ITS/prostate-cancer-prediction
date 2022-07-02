@@ -30,7 +30,7 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 2. Total number of patients: 84496
 
 
-3. Balanced classes (50% patients with cancer, 50% patients without cancer)
+3. Balanced classes (50% patients with cancer, 50% patients without cancer) only for the training part
 
 
 4. Training set: 80% Test set: 20% 
@@ -39,7 +39,7 @@ In the folder *boxplot* there are the bloxplots for each type of input.
 5. Minimum time series' length for each patient = 5
 
 
-6. 50 <= age < 100
+6. 30 <= age < 100
 
 
 ### DIFFERENT TYPES OF INPUT
