@@ -1,5 +1,5 @@
 # BASELINES
-###If you want to run only the baselines:
+### If you want to run only the baselines:
 ## THIRD STEP: Running the code using the Command-Line
 Command Line Arguments:
 1. PATH1: path of the dataset for patients WITH cancer 
