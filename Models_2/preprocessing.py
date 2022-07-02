@@ -35,3 +35,28 @@ def concat_data(data1, data2):
     del data["months"]
     print("Number of patients: " + str(data["ss_number_id"].nunique()))
     return data
+
+def extract_info_wrapp(data1, data2):
+    def extract_info(data, cancer = True):
+        if cancer == False:
+            data["category"] = -1
+        df = data[['ss_number_id', 'category']].drop_duplicates()
+        visit = data.groupby("ss_number_id")["psa"].count().to_frame().rename(columns={'psa': 'visits'})
+        f = ["mean", "min", "max"]
+        mod_age = data.groupby("ss_number_id")["age"].agg(f).rename(columns={"mean": "mean_age", "min": "min_age", "max": "max_age"})
+        df = pd.merge(df, visit, how='inner', on='ss_number_id')
+        df = pd.merge(df, mod_age, how='inner', on='ss_number_id')
+        return df
+    df1 = extract_info(data1)
+    df2 = extract_info(data2, cancer = False)
+    # remove category
+    del data1["category"]
+    del data2["category"]
+    return pd.concat([df1, df2])
+
+def save_info(df, test):
+    df = df[df['ss_number_id'].isin(test['ss_number_id'])].reset_index(drop=True)
+    df.sort_values(by = "ss_number_id", inplace = True)
+    test.sort_values(by=["ss_number_id", "days"], inplace=True)
+    del test["days"]
+    df.to_csv("df.csv", index=False)
