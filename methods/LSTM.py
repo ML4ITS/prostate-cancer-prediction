@@ -1,29 +1,25 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import optuna as optuna
-import matplotlib.pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay
-from sklearn.metrics import confusion_matrix
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
-from torchmetrics import Specificity, F1Score,Accuracy
-from pytorch_lightning.loggers.csv_logs import CSVLogger
-from torchmetrics.functional import precision_recall
-from torch.nn import functional as F
-from sklearn import metrics
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.callbacks import LearningRateMonitor
-from methods.MLP import getMultiLayerPerceptron
-from utils import save_evaluation_metric, plot_accuracy_loss, dispatcher, get_random_numbers
 from dataset import *
-from IPython.display import display
-
+from methods.MLP import getMultiLayerPerceptron
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.loggers.csv_logs import CSVLogger
+from sklearn import metrics
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix
+from torchmetrics import Specificity, F1Score, Accuracy
+from utils import *
 
 
 class LSTMClassification(pl.LightningModule):
 
     def __init__(self, N_FEATURES, hidden_size, learning_rate,dropout,
-                              num_layers, rnn_type, bidirectional, activation,layers_m,dropout_m,hidden_dimension_size_m, case = None):
+                              num_layers, rnn_type, bidirectional, activation,layers_m,dropout_m,hidden_dimension_size_m, model2 = False, case = None):
         super(LSTMClassification, self).__init__()
         hidden_size = hidden_size
         num_layers = num_layers
@@ -32,6 +28,7 @@ class LSTMClassification(pl.LightningModule):
         self.learning_rate = learning_rate
         self.criterion = nn.BCEWithLogitsLoss()
         self.case = case
+        self.model2 = model2
         if rnn_type == 'lstm':
             self.rnn = nn.LSTM(input_size= N_FEATURES,
                                 hidden_size=hidden_size,
@@ -128,6 +125,9 @@ class LSTMClassification(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         save_evaluation_metric("lstm", self.accuracy_test.compute(), self.test_F1score.compute(), self.specificity.compute(), self.case)
+        #save results
+        if self.model2:
+            save_result_df("lstm", self.target, self.preds, self.case)
         # #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
@@ -171,7 +171,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 40
+    EPOCHS = 1
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -207,7 +207,7 @@ def hyperparameter_tuning(trials):
     print("\nBest loss : {}".format(study.best_value))
     return study
 
-def training_test_LSTM(epochs, trials, case, iterations):
+def training_test_LSTM(epochs, trials, case, iterations, model2 = False):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
@@ -226,7 +226,8 @@ def training_test_LSTM(epochs, trials, case, iterations):
 
     accuracy = []
     for i in range(iterations):
-        model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type, bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m, case)
+        model = LSTMClassification(N_FEATURES, hidden_size, learning_rate, dropout, num_layers, rnn_type,
+                                   bidirectional, activation, layers_m,dropout_m,hidden_dimension_size_m, model2, case)
 
         dm = psaDataModule(batch_size = batch_size)
         lr_monitor = LearningRateMonitor(logging_interval="step")
