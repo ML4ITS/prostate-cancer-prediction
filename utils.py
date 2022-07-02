@@ -6,8 +6,11 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 import torch.nn as nn
 import argparse
+from sklearn.metrics import *
 import functools
 from sklearn.manifold import Isomap
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix
 from sklearn.inspection import permutation_importance
 
 dispatcher= {'nn.Tanh()': nn.Tanh(), 'nn.ReLU()': nn.ReLU(), 'nn.ELU()': nn.ELU(), 'nn.LeakyReLU()': nn.LeakyReLU(), 'nn.Sigmoid()': nn.Sigmoid()}
@@ -131,6 +134,42 @@ def feature_importance(X_test, y_test, model, baseline, name):
     ax.set_ylabel("mean accuracy decrease")
     fig.tight_layout()
     plt.savefig(baseline + "/feature_importance_"+ name)
+
+def conf_matrix_categ(file, df, model, feature1, feature2, inf, sup, case):
+    if sup == -1:
+        c = df.loc[(df[feature1] == inf)]
+    else:
+        c = df.loc[(df[feature1] >= inf) & (df[feature2] < sup)]
+    cm = confusion_matrix(c["target"], c["pred"])
+    f1 = f1_score(c["target"], c["pred"], average='macro')
+    accuracy = accuracy_score(c["target"], c["pred"])
+    file.write(str(inf) + "<=" + feature1 + "<" + str(sup) +"\taccuracy: "+ str(accuracy) + "\tf1score: "+ str(f1) + "\n")
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot()
+    disp.figure_.savefig(model + "/" + case + "/categories/conf_mat" + str(inf) + "_" + feature1 + "_" + str(sup)+ ".png", dpi=300)
+    plt.clf()
+    plt.cla()
+    return accuracy, f1_score
+
+def save_result_df(model, target, preds, case):
+    file = open(model + "/" + case + "/categories/results.txt", "w")
+    df = pd.read_csv("df.csv")
+    df["target"] = np.array(target).astype(int)
+    df["pred"] = np.array(preds).astype(int)
+
+    #visit < 10 10 - 20 > 20
+    conf_matrix_categ(file, df, model, "visits", "visits", 0, 10, case)
+    conf_matrix_categ(file, df, model, "visits", "visits", 10, 20, case)
+    conf_matrix_categ(file, df, model, "visits", "visits", 20, 500, case)
+    #age 30-50 50-70 70-100
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 30, 60, case)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 60, 80, case)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 80, 100, case)
+    #risk category
+    df = df.loc[(df["target"] == 1)]
+    for i in range(6):
+        conf_matrix_categ(file, df, model, "category", "category", i, -1, case)
+    file.close()
 
 
 
