@@ -1,23 +1,20 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import optuna as optuna
-import matplotlib.pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay
-from sklearn.metrics import confusion_matrix
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
-from torchmetrics import Specificity, F1Score,Accuracy
-from torchmetrics.functional import accuracy
-from pytorch_lightning.loggers.csv_logs import CSVLogger
-from torchmetrics.functional import precision_recall
-from torch.nn import functional as F
-from sklearn import metrics
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.callbacks import LearningRateMonitor
-import matplotlib.pyplot as plt
-from utils import get_random_numbers, save_evaluation_metric, plot_accuracy_loss, dispatcher
 from dataset import *
-import random
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.loggers.csv_logs import CSVLogger
+from sklearn import metrics
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix
+from torchmetrics import Specificity, F1Score, Accuracy
+from torchmetrics.functional import precision_recall
+from utils import *
+
 
 def getMultiLayerPerceptron(InputNetworkSize, layers,
                                    hidden_dimension_size, activationFunction, dropout):
@@ -119,6 +116,8 @@ class MLPClassification(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         save_evaluation_metric("mlp", self.accuracy_test.compute(), self.test_F1score.compute(), self.specificity.compute(), self.case)
+        #save results
+        save_result_df("mlp", self.target, self.preds, self.case)
         #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
@@ -154,7 +153,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 40
+    EPOCHS = 2
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
