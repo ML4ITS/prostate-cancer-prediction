@@ -10,20 +10,13 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 from torchmetrics import Specificity, F1Score, Accuracy
-from torchmetrics.functional import accuracy
 from pytorch_lightning.loggers.csv_logs import CSVLogger
-from torchmetrics.functional import precision_recall
-from torch.nn import functional as F
 from sklearn import metrics
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
 from settings import p
 from utils import *
 from dataset import *
-from IPython.display import display
-
-
-
 
 
 def getConv1d(n_features, layers, hidden_dimension_size, activationFunction, dropout, padding):
@@ -145,6 +138,8 @@ class CNN1DClassification(pl.LightningModule):
     def test_epoch_end(self, outputs):
         path =  "cnn1d_heads/" if self.m_kernels else "cnn1d/"
         save_evaluation_metric(path, self.accuracy_test.compute(), self.test_F1score.compute(), self.specificity.compute(), self.case)
+        #save results
+        save_result_df(path, self.target, self.preds, self.case)
         #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
@@ -187,7 +182,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 40
+    EPOCHS = 1
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
