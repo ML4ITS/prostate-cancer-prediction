@@ -135,21 +135,29 @@ def feature_importance(X_test, y_test, model, baseline, name):
     fig.tight_layout()
     plt.savefig(baseline + "/feature_importance_"+ name)
 
-def conf_matrix_categ(file, df, model, feature1, feature2, inf, sup, case):
+def conf_matrix_categ(file, df, model, feature1, feature2, inf, sup, case, feature3 = None, feature4 = None):
+    mean, median, mode = None, None, None
     if sup == -1:
         c = df.loc[(df[feature1] == inf)]
     else:
-        c = df.loc[(df[feature1] >= inf) & (df[feature2] < sup)]
+        if feature3 is not None and feature4 is not None:
+            c = df.loc[(df[feature1] >= inf) & (df[feature1] < sup) & (df[feature2] < feature4) & (df[feature2] >= feature3)]
+            mean, median, mode = c["visits"].mean(), c["visits"].median(), c["visits"].mode()
+        else:
+            c = df.loc[(df[feature1] >= inf) & (df[feature2] < sup)]
     cm = confusion_matrix(c["target"], c["pred"])
     f1 = f1_score(c["target"], c["pred"], average='macro')
     accuracy = accuracy_score(c["target"], c["pred"])
-    file.write(str(inf) + "<=" + feature1 + "<" + str(sup) +"\taccuracy: "+ str(accuracy) + "\tf1score: "+ str(f1) + "\n")
+    if feature3 is None:
+        file.write(str(inf) + "<=" + feature1 + "<" + str(sup) +"\taccuracy: "+ str(accuracy) + "\tf1score: "+ str(f1) + "\n")
+    else:
+        file.write(str(inf) + "<=" + feature1 + "<" + str(sup)  + "  "+ str(feature3) + "<=" + feature2 + "<" + str(feature4) +"\taccuracy: " + str(accuracy) + "\tf1score: " + str(f1) + "\n")
+        file.write("visits: \t mean: " + str(mean) + "\tmedian: "+ str(median) + "\tmode: "+ str(mode) + "\n")
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot()
     disp.figure_.savefig(model + "/" + case + "/categories/conf_mat" + str(inf) + "_" + feature1 + "_" + str(sup)+ ".png", dpi=300)
     plt.clf()
     plt.cla()
-    return accuracy, f1_score
 
 def save_result_df(model, target, preds, case):
     file = open(model + "/" + case + "/categories/results.txt", "w")
@@ -160,11 +168,20 @@ def save_result_df(model, target, preds, case):
     #visit < 10 10 - 20 > 20
     conf_matrix_categ(file, df, model, "visits", "visits", 0, 10, case)
     conf_matrix_categ(file, df, model, "visits", "visits", 10, 20, case)
-    conf_matrix_categ(file, df, model, "visits", "visits", 20, 500, case)
+    conf_matrix_categ(file, df, model, "visits", "visits", 20, 30, case)
+    conf_matrix_categ(file, df, model, "visits", "visits", 30, 40, case)
+    conf_matrix_categ(file, df, model, "visits", "visits", 40, 500, case)
     #age 30-50 50-70 70-100
-    conf_matrix_categ(file, df, model, "min_age", "max_age", 30, 60, case)
-    conf_matrix_categ(file, df, model, "min_age", "max_age", 60, 80, case)
-    conf_matrix_categ(file, df, model, "min_age", "max_age", 80, 100, case)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 30, 45, case, feature3=55,feature4=65)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 30, 45, case, feature3=65, feature4=75)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 30, 45, case, feature3=75, feature4=85)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 45, 55, case, feature3=55, feature4=65)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 45, 55, case, feature3=65, feature4=75)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 45, 55, case, feature3=75, feature4=85)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 55, 65, case, feature3=65, feature4=75)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 55, 65, case, feature3=75, feature4=85)
+    conf_matrix_categ(file, df, model, "min_age", "max_age", 65, 75, case, feature3=75, feature4=85)
+
     #risk category
     df = df.loc[(df["target"] == 1)]
     for i in range(6):
