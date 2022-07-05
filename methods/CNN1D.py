@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.metrics import confusion_matrix
 import torch
+torch.manual_seed(0)
 import torch.nn as nn
 import pytorch_lightning as pl
 from torchmetrics import Specificity, F1Score, Accuracy

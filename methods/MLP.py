@@ -3,6 +3,7 @@ import numpy as np
 import optuna as optuna
 import pytorch_lightning as pl
 import torch
+torch.manual_seed(0)
 import torch.nn as nn
 from dataset import *
 from pytorch_lightning.callbacks import LearningRateMonitor
