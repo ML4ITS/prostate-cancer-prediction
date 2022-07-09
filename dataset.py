@@ -41,18 +41,23 @@ from config_file.config_parser import Data
 from utils import get_binary_indicators
 from settings import p
 
+
+
 def extract_timesteps():
     """extract the maximum timesteps"""
-    data = pd.read_csv("../data_model.csv")
-    return data.shape[1] - 1 if p.regularization else data.groupby(["ss_number_id"]).count().max()[0]
+    data = pd.read_csv("../complete_dataset.csv")
+    if p.regularization is True:
+        return data.shape[1] - 1
+    else:
+        return data.groupby(["ss_number_id"]).count().max()[0]
 
 def extract_n_features():
     """extract the total number of features from data
     data.shape[1] - 2 because I dont consider the target and the id"""
-    data = pd.read_csv("../data_model.csv")
     if p.regularization:
         size = 2 if p.indicator else 1
     else:
+        data = pd.read_csv("../data.csv")
         size = data.shape[1] - 2
     return size
 
@@ -143,10 +148,10 @@ class psaDataModule(pl.LightningDataModule):
             return
         if stage is None and self.X_train is not None and self.X_test is not None:
             return
-        data = pd.read_csv("../data_model.csv")
-        x,y = manage_db(data)
-        #every time I call train_test_split, test and train are the same
-        x, test, y, test_y = train_test_split(x, y, train_size=0.8, shuffle=True, random_state = 42)
+        train = pd.read_csv("../train.csv", header = 0, index_col = False)
+        test = pd.read_csv("../test.csv", header = 0, index_col = False)
+        x, y = manage_db(train)
+        test, test_y = manage_db(test)
         print("SHAPE TRAIN: "+ str(x.shape))
         print("SHAPE TEST: " + str(test.shape))
         X_train, X_val, y_train, y_val = train_test_split(x, y, test_size=0.2, shuffle=True, random_state = None)
