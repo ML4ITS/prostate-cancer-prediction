@@ -89,7 +89,7 @@ class CNN1DClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
@@ -103,7 +103,7 @@ class CNN1DClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
@@ -118,7 +118,7 @@ class CNN1DClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
@@ -188,7 +188,7 @@ def objective(trial: optuna.trial.Trial) -> float:
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
                          accelerator="auto",
-                         devices=1 if torch.cuda.is_available() else None,
+                         devices=-1 if torch.cuda.is_available() else None,
                          callbacks=[early_stop_callback])
 
     trainer.fit(model, datamodule=dm)
@@ -222,6 +222,8 @@ def hyperparameter_tuning(trials):
 def training_test_CNN1D(epochs, trials, case, iterations, m_kernels = False):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
+    path = "cnn1d_heads/" if m_kernels else "cnn1d/"
+    save_hyperparameter(path, study, case)
     n_features = extract_n_features()
     learning_rate = trial.suggest_uniform("learning_rate", 1e-6, 1e-2)
     batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
@@ -261,13 +263,12 @@ def training_test_CNN1D(epochs, trials, case, iterations, m_kernels = False):
 
         trainer = pl.Trainer(
                             accelerator="auto",
-                            devices=1 if torch.cuda.is_available() else None,
+                            devices=-1 if torch.cuda.is_available() else None,
                             max_epochs=epochs,
                             logger=logger,
                             callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
                             )
         trainer.fit(model, datamodule = dm)
-        path =  "cnn1d_heads/" if m_kernels else "cnn1d/"
         torch.save(model, path + case + "/model")
         cnn1d_model = torch.load(path + case + "/model")
         print("------------STARTING TEST PART------------")
