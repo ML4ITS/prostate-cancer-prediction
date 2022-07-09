@@ -5,6 +5,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -21,10 +22,11 @@ def boxplot(results, names, baseline):
     ax.set_xticklabels(names)
     plt.savefig(baseline + "/classification_algoriths")
 
-def save_evaluation_metric(name, mean, std, baseline):
+def save_evaluation_metric(name, mean, std, f1score, baseline, grid_search):
     file = open(baseline + "/results.txt", "a+")
-    msg = "%s: mean %f (std %f) \n\n" % (name, mean, std)
-    file.write(msg)
+    msg = "%s: accuracy mean %f (accuracy std %f) f1score mean %f\n" % (name, mean, std, f1score)
+    hyp = 'Best Hyperparameters: %s\n' % grid_search.best_params_
+    file.write(msg + hyp)
     file.close()
 
 def flush_file(baseline):
@@ -32,13 +34,7 @@ def flush_file(baseline):
     fo.flush()
     fo.close()
 
-def split_train_test(data):
-    X = np.array(data.iloc[:, :-1])
-    y = np.array(data.iloc[:, -1])
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=50)
-    print("X train shape: " + str(X_train.shape))
-    print("X test shape: " + str(X_test.shape))
-    return X_train, X_test, y_train, y_test
+
 
 def get_models():
     models = [('KNN', KNeighborsClassifier()),
@@ -84,7 +80,7 @@ def get_parameters():
         'max_depth': [10, 15],
         'min_samples_leaf': [3, 4, 5, 6],
         'min_samples_split': [2, 6, 10],
-        'n_estimators': [5,20]
+        'n_estimators': [5, 20, 100, 200]
     }
     params.append([params_knn, params_dt, params_nb, params_svm, params_ada, params_rf])
     return params
@@ -105,12 +101,15 @@ def classifiers(train, test, baseline, iterations):
         grid_search.fit(x_train, y_train)
         model = grid_search.best_estimator_
         accuracy = []
+        f1sc = []
         for i in range(iterations):
             model.fit(x_train, y_train)
-            accuracy.append(accuracy_score(y_test, model.predict(x_test)))
+            y_pred = model.predict(x_test)
+            accuracy.append(accuracy_score(y_test, y_pred))
+            f1sc.append(f1_score(y_test, y_pred))
         results.append(accuracy)
         names.append(name)
-        save_evaluation_metric(name, np.mean(accuracy), np.std(accuracy), baseline)
+        save_evaluation_metric(name, np.mean(accuracy), np.std(accuracy), np.mean(f1sc), baseline, grid_search)
         feature_importance(x_test, y_test, model, baseline, name)
         index += 1
     boxplot(results, names, baseline)
