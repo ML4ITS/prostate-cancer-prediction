@@ -70,7 +70,7 @@ class MLPClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         self.accuracy_train.update(preds,y)
@@ -83,7 +83,7 @@ class MLPClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         self.accuracy_val.update(preds,y)
@@ -97,7 +97,7 @@ class MLPClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         self.prob.extend(preds.numpy())
@@ -159,7 +159,7 @@ def objective(trial: optuna.trial.Trial) -> float:
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
                          accelerator="auto",
-                         devices=1 if torch.cuda.is_available() else None,
+                         devices=-1 if torch.cuda.is_available() else None,
                          callbacks=[early_stop_callback])
 
     trainer.fit(MLPmodel, datamodule=dm)
@@ -194,6 +194,7 @@ def hyperparameter_tuning(trials):
 def training_test_MLP(epochs, trials, case, iterations):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
+    save_hyperparameter("mlp/", study, case)
     layers = trial.suggest_int("layers", 1, 15, step=1)
     dropout = get_random_numbers(layers, trial, 0.0, 0.9, "dropout", int = False, desc = False)
     hidden_dimension_size = get_random_numbers(layers, trial, 32, 1024, "hidden_dim",step=64)
@@ -227,7 +228,7 @@ def training_test_MLP(epochs, trials, case, iterations):
 
         trainer = pl.Trainer(
                             accelerator="auto",
-                            devices = 1 if torch.cuda.is_available() else None,
+                            devices =-1 if torch.cuda.is_available() else None,
                             max_epochs=epochs,
                             logger=logger,
                             callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
