@@ -71,7 +71,11 @@ def concat_data(data1, data2):
     data.reset_index(drop = True, inplace = True)
     print("Number of patients: " + str(data["ss_number_id"].nunique()))
     print(data.head())
-    del data["ss_number_id"]
     print("Features: " + str(data.columns))
     data.reset_index(drop = True, inplace = True)
     return data
+
+def remove_id(data1, data2):
+    del data1["ss_number_id"]
+    del data2["ss_number_id"]
+    return data1, data2
