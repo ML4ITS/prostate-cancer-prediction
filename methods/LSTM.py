@@ -77,7 +77,7 @@ class LSTMClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
@@ -91,7 +91,7 @@ class LSTMClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
@@ -106,7 +106,7 @@ class LSTMClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = self.forward(x)
+        preds = torch.FloatTensor(self.forward(x)).type_as(x)
         y = y.reshape(-1,1)
         loss = self.criterion(preds, y.type(torch.FloatTensor))
         preds = torch.sigmoid(preds)
@@ -177,7 +177,7 @@ def objective(trial: optuna.trial.Trial) -> float:
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
                          accelerator="auto",
-                         devices=1 if torch.cuda.is_available() else None,
+                         devices=-1 if torch.cuda.is_available() else None,
                          callbacks=[early_stop_callback])
 
     trainer.fit(LSTMmodel, datamodule=dm)
@@ -211,6 +211,7 @@ def hyperparameter_tuning(trials):
 def training_test_LSTM(epochs, trials, case, iterations, model2 = False):
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
+    save_hyperparameter("lstm/", study, case)
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
     num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-5, 1e-2)
@@ -250,7 +251,7 @@ def training_test_LSTM(epochs, trials, case, iterations, model2 = False):
 
         trainer = pl.Trainer(
                             accelerator="auto",
-                            devices=1 if torch.cuda.is_available() else None,
+                            devices=-1 if torch.cuda.is_available() else None,
                             max_epochs=epochs,
                             logger=logger,
                             callbacks=[early_stop_callback,checkpoint_callback, lr_monitor]
