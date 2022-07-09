@@ -70,9 +70,9 @@ class MLPClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = torch.FloatTensor(self.forward(x)).type_as(x)
+        preds = self.forward(x).type_as(x)
         y = y.reshape(-1,1)
-        loss = self.criterion(preds, y.type(torch.FloatTensor))
+        loss = self.criterion(preds, y.type(torch.FloatTensor).type_as(preds))
         self.accuracy_train.update(preds,y)
         logs = {"train_loss" : loss, "train_acc" : self.accuracy_train}
         self.log_dict(logs, on_step=False, on_epoch=True, prog_bar=True, logger = True)
@@ -83,9 +83,9 @@ class MLPClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = torch.FloatTensor(self.forward(x)).type_as(x)
+        preds = self.forward(x).type_as(x)
         y = y.reshape(-1,1)
-        loss = self.criterion(preds, y.type(torch.FloatTensor))
+        loss = self.criterion(preds, y.type(torch.FloatTensor).type_as(preds))
         self.accuracy_val.update(preds,y)
         logs = {"valid_loss" : loss, "valid_acc" : self.accuracy_val}
         self.log_dict(logs, on_step=False, on_epoch=True, prog_bar=True, logger = True)
@@ -97,9 +97,9 @@ class MLPClassification(pl.LightningModule):
         x.shape = (batch_size, timesteps, number of features
         y.shape = (batch_size)"""
         x, y, _ = batch
-        preds = torch.FloatTensor(self.forward(x)).type_as(x)
+        preds = self.forward(x).type_as(x)
         y = y.reshape(-1,1)
-        loss = self.criterion(preds, y.type(torch.FloatTensor))
+        loss = self.criterion(preds, y.type(torch.FloatTensor).type_as(preds))
         self.prob.extend(preds.numpy())
         preds = (preds>0.5).float()
         self.target.extend(y.numpy())
