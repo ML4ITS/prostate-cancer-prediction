@@ -39,6 +39,12 @@ def save_evaluation_metric(model, accuracy, f1score, specificity, case):
     file.write(content)
     file.close()
 
+def save_hyperparameter(model, study, case):
+    file = open(model + case + "/results.txt", "a+")
+    content = study.best_params
+    file.write(str(content) + "\n")
+    file.close()
+
 def flush_file(model, case):
     fo = open(model+ "/" + case +"/results.txt", "wb")
     fo.flush()
@@ -142,22 +148,28 @@ def conf_matrix_categ(file, df, model, feature1, feature2, inf, sup, case, featu
     else:
         if feature3 is not None and feature4 is not None:
             c = df.loc[(df[feature1] >= inf) & (df[feature1] < sup) & (df[feature2] < feature4) & (df[feature2] >= feature3)]
-            mean, median, mode = c["visits"].mean(), c["visits"].median(), c["visits"].mode()
         else:
             c = df.loc[(df[feature1] >= inf) & (df[feature2] < sup)]
-    cm = confusion_matrix(c["target"], c["pred"])
-    f1 = f1_score(c["target"], c["pred"], average='macro')
-    accuracy = accuracy_score(c["target"], c["pred"])
-    if feature3 is None:
-        file.write(str(inf) + "<=" + feature1 + "<" + str(sup) +"\taccuracy: "+ str(accuracy) + "\tf1score: "+ str(f1) + "\n")
+    if c.empty is not True:
+        cm = confusion_matrix(c["target"], c["pred"])
+        f1 = f1_score(c["target"], c["pred"], average='macro')
+        accuracy = accuracy_score(c["target"], c["pred"])
+        if feature3 is None:
+            file.write(str(inf) + "<=" + feature1 + "<" + str(sup) +"\taccuracy: "+ str(accuracy) + "\tf1score: "+ str(f1) + "\n")
+        else:
+            mean, median, mode = c["visits"].mean(), c["visits"].median(), c["visits"].mode()[0]
+            file.write(str(inf) + "<=" + feature1 + "<" + str(sup)  + "  "+ str(feature3) + "<=" + feature2 + "<" + str(feature4) +"\taccuracy: " + str(accuracy) + "\tf1score: " + str(f1) + "\n")
+            file.write("visits: \t mean: " + str(mean) + "\tmedian: "+ str(median) + "\tmode: "+ str(mode) + "\n")
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot()
+        if feature3 is None:
+            disp.figure_.savefig(model + "/" + case + "/categories/conf_mat" + str(inf) + "_" + feature1 + "_" + str(sup)+ ".png", dpi=300)
+        else:
+            disp.figure_.savefig(model + "/" + case + "/categories/conf_mat_age_" + str(inf) +  "_" + str(feature4) + ".png",dpi=300)
+        plt.clf()
+        plt.cla()
     else:
-        file.write(str(inf) + "<=" + feature1 + "<" + str(sup)  + "  "+ str(feature3) + "<=" + feature2 + "<" + str(feature4) +"\taccuracy: " + str(accuracy) + "\tf1score: " + str(f1) + "\n")
-        file.write("visits: \t mean: " + str(mean) + "\tmedian: "+ str(median) + "\tmode: "+ str(mode) + "\n")
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot()
-    disp.figure_.savefig(model + "/" + case + "/categories/conf_mat" + str(inf) + "_" + feature1 + "_" + str(sup)+ ".png", dpi=300)
-    plt.clf()
-    plt.cla()
+        file.write("No results for this category\n")
 
 def save_result_df(model, target, preds, case):
     file = open(model + "/" + case + "/categories/results.txt", "w")
