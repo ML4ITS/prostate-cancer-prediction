@@ -4,6 +4,7 @@ import pytorch_lightning as pl
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
@@ -44,7 +45,7 @@ from settings import p
 
 
 def extract_timesteps():
-    """extract the maximum timesteps"""
+    #extract the maximum timesteps
     data = pd.read_csv("../complete_dataset.csv")
     if p.regularization is True:
         return data.shape[1] - 1
@@ -52,8 +53,8 @@ def extract_timesteps():
         return data.groupby(["ss_number_id"]).count().max()[0]
 
 def extract_n_features():
-    """extract the total number of features from data
-    data.shape[1] - 2 because I dont consider the target and the id"""
+    #extract the total number of features from data
+    # data.shape[1] - 2 because I don't consider the target and the id
     if p.regularization:
         size = 2 if p.indicator else 1
     else:
@@ -62,6 +63,7 @@ def extract_n_features():
     return size
 
 def manage_db(df):
+    #for each ss_number_id the respected features are inserted in an array
     if p.regularization is not True:
         sequences = []
         label = []
@@ -75,16 +77,15 @@ def manage_db(df):
         return np.array(df.iloc[:, :-1]), np.array(df.iloc[:, -1])
 
 def pad_collate(data):
-    """data is a list of tuples with (example, label, length)
-        where example is a tensor of arbitrary shape
-        and label/length are scalars"""
+    #time series length is irregular so padding is needed
+    #data is a list of tuples with (example, label, length)
+    # where example is a tensor of arbitrary shape and label/length are scalars
     _, labels, lengths = zip(*data)
     max_len = extract_timesteps()
     n_ftrs = data[0][0].size(1)
     features = torch.zeros((len(data), max_len, n_ftrs))
     labels = torch.tensor(labels)
     lengths = torch.tensor(lengths)
-
     for i in range(len(data)):
         j, k = data[i][0].size(0), data[i][0].size(1)
         features[i] = torch.cat([data[i][0], torch.zeros((max_len - j, k))])
@@ -138,6 +139,8 @@ class psaDataModule(pl.LightningDataModule):
         self.y_test = None
         self.preprocessing = StandardScaler()
         self.regularization = p.regularization
+        self.scaler = MinMaxScaler()
+
     def prepare_data(self):
         pass
 
@@ -150,12 +153,19 @@ class psaDataModule(pl.LightningDataModule):
             return
         train = pd.read_csv("../train.csv", header = 0, index_col = False)
         test = pd.read_csv("../test.csv", header = 0, index_col = False)
+        # data and labels have been extracted
         x, y = manage_db(train)
         test, test_y = manage_db(test)
+        self.scaler.fit(np.vstack(x))
+        for i in range(len(x)):
+            print(x[i].shape)
+            x[i] = self.scaler.transform(x[i])
+        for i in range(len(test)):
+            test[i] = self.scaler.transform(test[i])
         print("SHAPE TRAIN: "+ str(x.shape))
         print("SHAPE TEST: " + str(test.shape))
+        #Train and validation test have been extracted
         X_train, X_val, y_train, y_val = train_test_split(x, y, test_size=0.2, shuffle=True, random_state = None)
-
 
         if stage == 'fit' or stage is None:
             self.X_train = X_train if self.regularization else np.array(X_train, dtype = object)
