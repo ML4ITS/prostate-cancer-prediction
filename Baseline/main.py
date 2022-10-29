@@ -39,7 +39,8 @@ if __name__ == "__main__":
         train, test = remove_id(train, test)
         print("Shape train: " + str(train.shape))
         print("Shape test: " + str(test.shape))
-        # same db every time
+        #the dataset is now ready
+        #model part
         classifiers(train, test, case, m.repetition)
         print("---------Next baseline-----------")
 
