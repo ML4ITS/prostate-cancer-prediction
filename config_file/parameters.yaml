@@ -1,17 +1,7 @@
-#MODELS 1
-#regularization: False
-#
-#interpolation: False
-#
-#indicator: False
+trials: 2 #number of trials for hyperparameter tuning
 
-
-
-#MODELS 2
-trials: 50 #number of trials for hyperparameter tuning
-
-epochs: 100 #number of epochs for the traning part
+epochs: 1 #number of epochs for the traning part
 
 balanced : True #True: balanced dataset / False: unbalanced dataset
 
-repetition : 6
+repetition : 2 #number of times to retrain the model
