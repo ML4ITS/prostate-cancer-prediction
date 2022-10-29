@@ -4,6 +4,7 @@ import pandas as pd
 def drop_duplicates(data):
     size = data.shape[0]
     data["delta_days"] = data.sort_values(by=["days"]).groupby(["ss_number_id"])["days"].apply(lambda x: x - x.shift()).fillna(100)
+    #the visits too closed have been removed (too closed means 8 days)
     data = data.loc[data["delta_days"] > 8]
     print("Number of values too closed removed: " + str(size - data.shape[0]))
     del data["delta_days"]
@@ -12,8 +13,6 @@ def drop_duplicates(data):
 def from_days_to_months(data1, data2):
     data1["months"] = round(data1["days"] / 30)
     data2["months"] = round(data2["days"] / 30)
-    # del data1["days"]
-    # del data2["days"]
     return data1, data2
 
 def add_feature_age(data1, data2):
@@ -51,6 +50,7 @@ def assign_target(data1, data2):
     return data1, data2
 
 def remove_outliers(data):
+    #outliers means patients with age < 30 and age >=100
     d1 = data.shape[0]
     data = data.loc[(data['age'] >=30) & (data['age'] < 100)]
     d2 = data.shape[0]
@@ -69,6 +69,7 @@ def balance_db(data1, data2, balanced, id = None):
     return data2
 
 def extract_unbalanced_test(data, data1, model2 = None):
+    #the test set is unbalnced so the samples have been randomly extracted from the dataset
     if model2 is not None:
         n = data["ss_number_id"].unique()
         dim_test = round(len(data1["ss_number_id"].unique()) * 2 * 0.2)
@@ -86,6 +87,7 @@ def extract_unbalanced_test(data, data1, model2 = None):
     return data, test
 
 def extract_balanced_train(data, balanced, id = None):
+    #the training set is balanced so patients with cancer and no cancer have been extracted with a proportion 50%-50%
     data1 = data[data.iloc[:, -1] == 1]
     data2 = data[data.iloc[:, -1] == 0]
     data2 = balance_db(data1, data2, balanced, id)
