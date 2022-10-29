@@ -14,6 +14,7 @@ def extract_last_value_wrapp(data1, data2, val1, val2):
 
 def extract_delta_wrapp(data1, data2):
     #second baseline
+    #delta time (the distance between two consecutive visits) has been extracted
     data1, data2 = from_days_to_months(data1, data2)
     def extract_delta_value(data):
         data["delta"] = data.sort_values(by=["months"]).groupby(["ss_number_id"])["months"].apply(lambda x: x - x.shift()).fillna(np.nan)
@@ -25,6 +26,7 @@ def extract_delta_wrapp(data1, data2):
 
 def extract_statistics_wrapp(data1, data2):
     #second baseline
+    #mean, median, mode and quantile have been extracted from the time feature
     def extract_statistics(data):
         def q1(x): return x.quantile(0.25)
         def q3(x): return x.quantile(0.75)
@@ -38,6 +40,7 @@ def extract_statistics_wrapp(data1, data2):
 
 def extract_velocity_wrapp(data1, data2):
     #third baseline
+    #the velocity formula has been extracted using deltaPSA as numerator and deltaTIME as denominator
     def extract_velocity(data):
         data["delta_x"] = data.sort_values(by=["days"]).groupby(["ss_number_id"])["psa"].apply(
             lambda x: x - x.shift()).fillna(np.nan)
@@ -51,6 +54,7 @@ def extract_velocity_wrapp(data1, data2):
     return data1, data2
 
 def clean_df_wrapp(data1, data2, baseline):
+    #some usuless features have been removed from the dataset
     def clean_df(data, baseline):
         if baseline == 3:
             del data["delta_x"]
@@ -64,7 +68,7 @@ def clean_df_wrapp(data1, data2, baseline):
     return data1, data2
 
 def concat_data(data1, data2):
-    """union of the two dbs"""
+    #union of the two dbs
     data = pd.concat([data1, data2])
     data.replace([np.inf, -np.inf], np.nan, inplace = True)
     data.dropna(inplace = True)
@@ -76,6 +80,7 @@ def concat_data(data1, data2):
     return data
 
 def remove_id(data1, data2):
+    #the id is removed from the dataset
     del data1["ss_number_id"]
     del data2["ss_number_id"]
     return data1, data2
