@@ -18,6 +18,7 @@ def flush_file(case):
     fo.close()
 
 def padding(x):
+    #the time series are irregular in the number of points so padding is necessary
     max_len = extract_timesteps()
     n_ftrs = x[0].shape[1]
     features = np.zeros((len(x), max_len, n_ftrs))
@@ -41,6 +42,7 @@ def save_evaluation_metric(name, mean, std, case):
     file.close()
 
 def boxplot(results, names, case):
+    #boxplot to compare the different ML models
     fig = plt.figure(figsize=(10,10))
     fig.suptitle('How to compare rocket performances')
     ax = fig.add_subplot(111)
@@ -49,6 +51,7 @@ def boxplot(results, names, case):
     plt.savefig("rocket/" + case + "/boxplot")
 
 def get_parameters():
+    #hyperparamters have been set for each model
     params = []
     params_lr = {"C": np.logspace(-3, 3, 7), "penalty": ["l1", "l2"]}
     params_ridge = {'normalize' : [True, False]}
@@ -69,6 +72,7 @@ def get_parameters():
     return params
 
 def classifiers(x_train, x_test, y_train, y_test, case, iterations):
+    #given the training and test set and the different ML models, the prediction have been made
     flush_file("rocket/" + case)
     models = get_models()
     params = get_parameters()[0]

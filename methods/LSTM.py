@@ -11,8 +11,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers.csv_logs import CSVLogger
 from sklearn import metrics
-from sklearn.metrics import ConfusionMatrixDisplay
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from torchmetrics import Specificity, F1Score, Accuracy
 from utils import *
 
@@ -129,7 +128,7 @@ class LSTMClassification(pl.LightningModule):
         #save results
         if self.model2:
             save_result_df("lstm", self.target, self.preds, self.case)
-        # #confusion matrix
+        #confusion matrix
         cm = confusion_matrix(self.target, self.preds)
         disp = ConfusionMatrixDisplay(confusion_matrix = cm)
         disp.plot()
@@ -143,14 +142,11 @@ class LSTMClassification(pl.LightningModule):
         plt.savefig("lstm/" + self.case +"/roc_curve.png")
 
 
-
-
-
 def objective(trial: optuna.trial.Trial) -> float:
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
     num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-5, 1e-2)
-    batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
+    batch_size = trial.suggest_int("batch_size", 512, 1024, step=32)
     dropout = trial.suggest_uniform("dropout", 0.0, 0.8)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])
@@ -172,7 +168,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 1
+    EPOCHS = 15
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -209,13 +205,14 @@ def hyperparameter_tuning(trials):
     return study
 
 def training_test_LSTM(epochs, trials, case, iterations, model2 = False):
+    #create model and make prediction
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     save_hyperparameter("lstm/", study, case)
     hidden_size = trial.suggest_int("hidden_size", 32, 256, step=32)
     num_layers = trial.suggest_int("num_layers", 1, 3, step=1)
     learning_rate = trial.suggest_uniform("learning_rate", 1e-5, 1e-2)
-    batch_size = trial.suggest_int("batch_size", 32, 128, step=32)
+    batch_size = trial.suggest_int("batch_size", 512, 1024, step=32)
     dropout = trial.suggest_uniform("dropout", 0.0, 0.8)
     rnn_type = trial.suggest_categorical("rnn_type", ["lstm", "gru", "rnn"])
     bidirectional = trial.suggest_categorical("bidirectional", [True, False])

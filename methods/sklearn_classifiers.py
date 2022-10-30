@@ -15,6 +15,7 @@ from utils import *
 
 
 def boxplot(results, names, baseline):
+    #bloxplot to compare the different models
     fig = plt.figure(figsize=(10,10))
     fig.suptitle('How to compare sklearn classification algorithms')
     ax = fig.add_subplot(111)
@@ -23,6 +24,7 @@ def boxplot(results, names, baseline):
     plt.savefig(baseline + "/classification_algoriths")
 
 def save_evaluation_metric(name, mean, std, f1score, baseline, grid_search):
+    #the evaluation metrics have been saved in results.txt
     file = open(baseline + "/results.txt", "a+")
     msg = "%s: accuracy mean %f (accuracy std %f) f1score mean %f\n" % (name, mean, std, f1score)
     hyp = 'Best Hyperparameters: %s\n' % grid_search.best_params_
@@ -34,8 +36,6 @@ def flush_file(baseline):
     fo.flush()
     fo.close()
 
-
-
 def get_models():
     models = [('KNN', KNeighborsClassifier()),
               ('DT', DecisionTreeClassifier(random_state=42)),
@@ -46,6 +46,7 @@ def get_models():
     return models
 
 def get_parameters():
+    #hyperparamters have been set for each model
     params = []
 
     params_knn = {
@@ -86,6 +87,7 @@ def get_parameters():
     return params
 
 def classifiers(train, test, baseline, iterations):
+    #given the training and test set and the different ML models, the prediction have been made
     x_train, x_test = np.array(train.iloc[:, :-1]), np.array(test.iloc[:, :-1])
     y_train, y_test = np.array(train.iloc[:, -1]), np.array(test.iloc[:, -1])
     flush_file(baseline)
