@@ -21,6 +21,7 @@ from dataset import *
 
 
 def getConv1d(n_features, layers, hidden_dimension_size, activationFunction, dropout, padding):
+    #the number of layers have been defined dinamically
     kernel= get_kernel_size(n_features, hidden_dimension_size[0], padding[0])
     model = torch.nn.Sequential(
         nn.Conv1d(in_channels = n_features, out_channels=hidden_dimension_size[0], kernel_size=kernel, padding=padding[0]),
@@ -58,17 +59,15 @@ class CNN1DClassification(pl.LightningModule):
         self.prob = []
         self.case = case
         self.m_kernels = m_kernels
-
         self.cnn1d_1 = getConv1d(n_features, layers_c, n_filt_1, self.activation, dropout_c, padding)
         self.cnn1d_2 = getConv1d(n_features, layers_c, n_filt_2, self.activation, dropout_c, padding)
         self.cnn1d_3 = getConv1d(n_features, layers_c, n_filt_3, self.activation, dropout_c, padding)
-
         self.linear = getMultiLayerPerceptron(None, layers_m, hidden_dimension_size_m, self.activation, dropout_m)
-
         self.flatten = torch.nn.Flatten()
     def forward(self, x):
         x = x.permute(0,2,1)
         if self.m_kernels:
+            #in case of multiple learning kernels approach
             x1 = self.cnn1d_1(x)
             x2 = self.cnn1d_2(x)
             x3 = self.cnn1d_3(x)
@@ -170,8 +169,6 @@ def objective(trial: optuna.trial.Trial) -> float:
     dropout_m = get_random_numbers(layers_m, trial, 0.1, 0.9, "dropout_m", int = False, desc = False)
     hidden_dimension_size_m = get_random_numbers(layers_m, trial, 128, 512, "hidden_dim_m",step=64)
     m_kernels = p.multiple_kernels
-
-
     model = CNN1DClassification(n_features, learning_rate, layers_c, n_filt_1, n_filt_2, n_filt_3, activation, dropout_c, layers_m, hidden_dimension_size_m, dropout_m, padding, m_kernels = m_kernels)
 
     dm = psaDataModule(batch_size=batch_size)
@@ -183,7 +180,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 1
+    EPOCHS = 15
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -220,6 +217,7 @@ def hyperparameter_tuning(trials):
     return study
 
 def training_test_CNN1D(epochs, trials, case, iterations, m_kernels = False):
+    #create model and make prediction
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     path = "cnn1d_heads/" if m_kernels else "cnn1d/"

@@ -19,6 +19,7 @@ from utils import *
 
 def getMultiLayerPerceptron(InputNetworkSize, layers,
                                    hidden_dimension_size, activationFunction, dropout):
+    #the number of layers have been defined dinamically
     model = torch.nn.Sequential(
         torch.nn.LazyLinear(hidden_dimension_size[0]) if InputNetworkSize == None
                     else torch.nn.Linear(InputNetworkSize, hidden_dimension_size[0]),
@@ -154,7 +155,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         mode='min'
     )
 
-    EPOCHS = 2
+    EPOCHS = 15
 
 
     trainer = pl.Trainer(max_epochs= EPOCHS,
@@ -192,6 +193,7 @@ def hyperparameter_tuning(trials):
     return study
 
 def training_test_MLP(epochs, trials, case, iterations):
+    #create model and make prediction
     study = hyperparameter_tuning(trials)
     trial = study.best_trial
     save_hyperparameter("mlp/", study, case)
