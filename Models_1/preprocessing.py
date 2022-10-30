@@ -3,11 +3,13 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 def change_format(data1, data2):
+    #time conversion
     data1["date"] = pd.to_datetime(data1["days"], unit = "d")
     data2["date"] = pd.to_datetime(data2["days"], unit = "d")
     return data1, data2
 
 def define_global_min_max(data1, data2):
+    #global min and global max have been defined for the resample process
     def add_months(start_date, delta_period):
         return start_date + relativedelta(months = delta_period)
     max1 = add_months(data1["date"].max(),1).to_pydatetime()
@@ -19,6 +21,7 @@ def define_global_min_max(data1, data2):
     return min, max
 
 def set_min_max(data1, data2, min, max):
+    #min and max have been added to each time series
     def min_max(data, min, max):
         data = data.sort_values(["ss_number_id", "date"])
         df = data.drop_duplicates("ss_number_id", keep = "last").copy()
@@ -34,6 +37,7 @@ def set_min_max(data1, data2, min, max):
     return data1, data2
 
 def prepare_df_wrapp(data1, data2):
+    #useless columns have been removed
     def prepare_df(data):
         data.sort_values(by = ["date"], inplace = True)
         data.set_index("date", inplace = True)
@@ -48,6 +52,7 @@ def prepare_df_wrapp(data1, data2):
     return data1, data2
 
 def get_interp(data, frequency, indicator):
+    #the not real values have been set to negative value to recognize it
     ris = data["psa"].resample(frequency).mean().fillna(-1)
     nan = (np.array(ris) != -1).astype(int)
     ris[ris == -1] = np.nan
@@ -59,6 +64,7 @@ def get_interp(data, frequency, indicator):
         return inter
 
 def interpolation_data(data1, data2, indicator, interp = False, frequency = "6M"):
+    #interpolation or zero filling technique
     def interpolation(data, interp):
         if interp:
             return data.groupby("ss_number_id").apply(lambda x: get_interp(x, frequency, indicator))
@@ -67,14 +73,11 @@ def interpolation_data(data1, data2, indicator, interp = False, frequency = "6M"
     return interpolation(data1, interp), interpolation(data2, interp)
 
 def concat_data(data1, data2):
-    """union of the two dbs"""
+    #union of the two dbs
     data = pd.concat([data1, data2])
     data["ss_number_id"] = data.index
     print("Number of patients: " + str(data["ss_number_id"].nunique()))
     del data["ss_number_id"]
-    # column_to_move = data.pop("ss_number_id")
-    # data.insert(0, "ss_number_id", column_to_move)
     data.reset_index(drop = True, inplace = True)
-
     return data
 
