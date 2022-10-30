@@ -12,7 +12,6 @@ import torch
 if __name__ == "__main__":
     #parameters from command line
     _, path1, path2 = sys.argv
-    # dummies, delta = str2bool(dummies), str2bool(delta)
     m = Data() #get parameters
     m.extractData()
     p.regularization = True #set regularization parameter
@@ -21,6 +20,7 @@ if __name__ == "__main__":
         print("GPU AVAILABLE")
     else:
         print("USING CPU")
+    #frequency windows
     windows = ["6m", "1y", "2y", "8y"]
     for k in range(4):
         accuracy = []
@@ -48,7 +48,6 @@ if __name__ == "__main__":
             train.to_csv("../train.csv", index=False)
             test.to_csv("../test.csv", index=False)
             #type LSTM
-
             case = "windows" + str(k+1) + "/case" + str(i+1)
             flush_file("lstm", case)
             acc = training_test_LSTM(m.epochs, m.trials, case, m.repetition)
